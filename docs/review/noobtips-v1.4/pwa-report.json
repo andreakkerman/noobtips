@@ -1,0 +1,107 @@
+{
+  "checks": [
+    "Project base: manifest, all precache assets, artwork/font URLs and icon sizes valid.",
+    "Offline cold reload, both active categories, full spins and local ratings work from the production cache.",
+    "Update arriving in spin remains waiting through reveal/rating; menu applies it quietly, removes old cache and preserves category, mute and ratings.",
+    "Sound-on preference re-unlocks Web Audio on the first spin after an update reload.",
+    "A second open game window blocks cache activation; closing it allows an idle foreground update.",
+    "A missing core asset rejects the update atomically; the previous complete cache still launches offline.",
+    "Relaunch picks up a complete newer version at welcome without losing saved ratings.",
+    "Portrait play and rotation back to landscape work without an orientation lock.",
+    "Short/long retained tips captured at all three resolutions; dominant typography, KANSLOOS consistency, controls and no overflow verified.",
+    "Custom-domain root build installs and cold-reloads offline."
+  ],
+  "screenshots": [
+    {
+      "filename": "1024x768-short-tip.png",
+      "tipId": "general-009",
+      "metrics": {
+        "tip": 35,
+        "title": 33,
+        "bottom": 657.875,
+        "height": 768,
+        "tipBottom": 337.875,
+        "ratingTop": 358.875,
+        "overflow": false,
+        "internalScroll": 0,
+        "headerTop": 0
+      }
+    },
+    {
+      "filename": "1024x768-long-tip.png",
+      "tipId": "arc-013",
+      "metrics": {
+        "tip": 35,
+        "title": 33,
+        "bottom": 679.75,
+        "height": 768,
+        "tipBottom": 359.75,
+        "ratingTop": 380.75,
+        "overflow": false,
+        "internalScroll": 0,
+        "headerTop": 0
+      }
+    },
+    {
+      "filename": "1280x800-short-tip.png",
+      "tipId": "general-009",
+      "metrics": {
+        "tip": 43.008,
+        "title": 35.328,
+        "bottom": 681.046875,
+        "height": 800,
+        "tipBottom": 361.046875,
+        "ratingTop": 382.046875,
+        "overflow": false,
+        "internalScroll": 0,
+        "headerTop": 0
+      }
+    },
+    {
+      "filename": "1280x800-long-tip.png",
+      "tipId": "arc-013",
+      "metrics": {
+        "tip": 43.008,
+        "title": 35.328,
+        "bottom": 707.921875,
+        "height": 800,
+        "tipBottom": 387.921875,
+        "ratingTop": 408.921875,
+        "overflow": false,
+        "internalScroll": 0,
+        "headerTop": 0
+      }
+    },
+    {
+      "filename": "1366x768-short-tip.png",
+      "tipId": "general-009",
+      "metrics": {
+        "tip": 45.8976,
+        "title": 37,
+        "bottom": 667.671875,
+        "height": 768,
+        "tipBottom": 347.671875,
+        "ratingTop": 368.671875,
+        "overflow": false,
+        "internalScroll": 0,
+        "headerTop": 0
+      }
+    },
+    {
+      "filename": "1366x768-long-tip.png",
+      "tipId": "arc-013",
+      "metrics": {
+        "tip": 45.8976,
+        "title": 37,
+        "bottom": 696.359375,
+        "height": 768,
+        "tipBottom": 376.359375,
+        "ratingTop": 397.359375,
+        "overflow": false,
+        "internalScroll": 0,
+        "headerTop": 0
+      }
+    }
+  ],
+  "errors": []
+}

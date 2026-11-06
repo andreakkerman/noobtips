@@ -1,0 +1,22 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import sharp from 'sharp';
+// Original vector icon, extending the existing Noobtips N/spark brand mark.
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><radialGradient id="bg" cx=".3" cy=".2" r="1"><stop stop-color="#35666a"/><stop offset=".65" stop-color="#123840"/><stop offset="1" stop-color="#081d24"/></radialGradient><linearGradient id="gold" x2=".8" y2="1"><stop stop-color="#fff0bd"/><stop offset=".5" stop-color="#ffd477"/><stop offset="1" stop-color="#b97b3e"/></linearGradient><linearGradient id="rim" x2="1" y2="1"><stop stop-color="#edc393"/><stop offset=".4" stop-color="#6a4634"/><stop offset=".65" stop-color="#c18a5a"/><stop offset="1" stop-color="#4e3930"/></linearGradient></defs>
+<path fill="url(#bg)" d="M0 0h512v512H0z"/>
+<circle cx="256" cy="256" r="216" fill="#0d2b31" stroke="url(#rim)" stroke-width="14"/>
+<circle cx="256" cy="256" r="199" fill="url(#bg)" stroke="#83c8b9" stroke-width="3"/>
+<path d="M153 358V158h57l91 124V158h58v200h-57l-91-125v125Z" fill="#03191e" transform="translate(0 7)"/>
+<path d="M153 350V150h57l91 124V150h58v200h-57l-91-125v125Z" fill="url(#gold)" stroke="#ffe0a0" stroke-width="2"/>
+<path d="m328 100 13 23 27-5-14 24 14 23-27-4-13 23-5-29-24-12 24-11Z" fill="#f6aa6d" stroke="#ffdf9c" stroke-width="2"/>
+<path d="M205 390h102" stroke="#b78a58" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+await mkdir('public/icons', { recursive: true });
+await writeFile('public/icons/noobtips.svg', svg);
+for (const [name, size] of [['icon-192',192],['icon-512',512],['apple-touch-icon',180]]) {
+  await sharp(Buffer.from(svg)).resize(size,size).png().toFile(`public/icons/${name}.png`);
+}
+// Keep all meaningful artwork inside the central 80% maskable safe area.
+const inset = svg.replace('viewBox="0 0 512 512"','viewBox="-64 -64 640 640"').replace('d="M0 0h512v512H0z"','d="M-64-64h640v640H-64z"');
+await sharp(Buffer.from(inset)).resize(512,512).png().toFile('public/icons/maskable-512.png');
+console.log('Generated original 192px, 512px, maskable and Apple touch icons.');
