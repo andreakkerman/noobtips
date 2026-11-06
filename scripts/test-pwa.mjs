@@ -7,7 +7,7 @@ import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 
 const smoke = process.argv.includes('--smoke');
-const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.8');
+const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.8.1');
 // Last-resort bound also covers browser protocol calls and teardown.
 const deadline = setTimeout(() => { console.error('PWA suite exceeded its hard deadline'); process.exit(1); }, smoke ? 180_000 : 300_000);
 await mkdir(output, { recursive: true });
@@ -71,6 +71,7 @@ try {
   const assets=JSON.parse(sw.match(/const ASSETS = (.*);/)[1]);
   for(const asset of assets) {assert(asset.startsWith('/Noobtips/'));assert.equal((await fetch(origin+asset)).status,200,asset);}
   assert(assets.some(a=>a.endsWith('/art/mountain/junk-atlas.webp')));
+  assert(assets.some(a=>a.endsWith('/art/mountain/salvage-atlas.webp')));
   assert(assets.some(a=>a.endsWith('/art/mountain/courtyard.webp')));
   const cssName=assets.find(a=>a.endsWith('.css'));const css=await(await fetch(origin+cssName)).text();
   assert(css.includes('/Noobtips/art/observatory.webp'));assert(!css.includes('url(/art/'));

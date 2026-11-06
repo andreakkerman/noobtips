@@ -24,8 +24,8 @@ test('mountain renders deterministic pixels within a bounded frame budget',async
   const {drawMountain,loadMountainArt}=await import(modulePath);
   const art=await loadMountainArt();
   const canvas=document.createElement('canvas');canvas.width=800;canvas.height=620;const c=canvas.getContext('2d')!;
-  drawMountain(c,100,art);const first=canvas.toDataURL();drawMountain(c,100,art);const same=canvas.toDataURL()===first;
-  const start=performance.now();for(let i=0;i<10;i++)drawMountain(c,100,art);const ms=(performance.now()-start)/10;
+  drawMountain(c,150,art);const first=canvas.toDataURL();drawMountain(c,150,art);const same=canvas.toDataURL()===first;
+  const start=performance.now();for(let i=0;i<10;i++)drawMountain(c,150,art);const ms=(performance.now()-start)/10;
   return {same,ms};
  });expect(result.same).toBe(true);expect(result.ms).toBeLessThan(150);
 });

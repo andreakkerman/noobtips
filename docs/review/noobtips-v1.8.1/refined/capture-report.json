@@ -1,0 +1,105 @@
+{
+  "captures": [
+    "1024-mountain-0.png",
+    "1024-mountain-1.png",
+    "1024-mountain-5.png",
+    "1024-mountain-10.png",
+    "1024-mountain-25.png",
+    "1024-mountain-50.png",
+    "1024-mountain-75.png",
+    "1024-mountain-100.png",
+    "1024-mountain-125.png",
+    "1024-mountain-150.png",
+    "1280-mountain-0.png",
+    "1280-mountain-1.png",
+    "1280-mountain-5.png",
+    "1280-mountain-10.png",
+    "1280-mountain-25.png",
+    "1280-mountain-50.png",
+    "1280-mountain-75.png",
+    "1280-mountain-100.png",
+    "1280-mountain-125.png",
+    "1280-mountain-150.png",
+    "1366-mountain-0.png",
+    "1366-mountain-1.png",
+    "1366-mountain-5.png",
+    "1366-mountain-10.png",
+    "1366-mountain-25.png",
+    "1366-mountain-50.png",
+    "1366-mountain-75.png",
+    "1366-mountain-100.png",
+    "1366-mountain-125.png",
+    "1366-mountain-150.png"
+  ],
+  "errors": [],
+  "animations": [
+    {
+      "width": 1024,
+      "count": 100,
+      "frames": 83,
+      "p95": 16.799999999999955
+    },
+    {
+      "width": 1024,
+      "count": 125,
+      "frames": 79,
+      "p95": 16.700000000000045
+    },
+    {
+      "width": 1024,
+      "count": 150,
+      "frames": 77,
+      "p95": 16.800000000000068
+    },
+    {
+      "width": 1280,
+      "count": 100,
+      "frames": 83,
+      "p95": 16.700000000000045
+    },
+    {
+      "width": 1280,
+      "count": 125,
+      "frames": 75,
+      "p95": 16.800000000000182
+    },
+    {
+      "width": 1280,
+      "count": 150,
+      "frames": 76,
+      "p95": 16.799999999999955
+    },
+    {
+      "width": 1366,
+      "count": 100,
+      "frames": 79,
+      "p95": 16.799999999999955
+    },
+    {
+      "width": 1366,
+      "count": 125,
+      "frames": 75,
+      "p95": 16.799999999999955
+    },
+    {
+      "width": 1366,
+      "count": 150,
+      "frames": 77,
+      "p95": 16.800000000000182
+    }
+  ],
+  "renderMs": [
+    {
+      "width": 1024,
+      "average": 1.475
+    },
+    {
+      "width": 1280,
+      "average": 1.825
+    },
+    {
+      "width": 1366,
+      "average": 1.6650000035762786
+    }
+  ]
+}

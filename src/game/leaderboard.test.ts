@@ -31,6 +31,16 @@ describe('deterministic mountain',()=>{
  it('continues visible deterministic additions above the original range without unbounded allocation',()=>{
   for(const count of [101,125,200,321,401,10000]){const objects=mountainObjects(count);expect(objects.length).toBeLessThanOrEqual(400);expect(objects.at(-1)!.id).toBe(count-1);expect(objects).toEqual(mountainObjects(count));}
  });
- it('adds one object every count, preserves every old placement and reloads identically',()=>{for(let n=0;n<=100;n++){const objects=mountainObjects(n);expect(objects).toHaveLength(n);expect(objects).toEqual(mountainObjects(n));if(n)expect(objects.slice(0,-1)).toEqual(mountainObjects(n-1));}});
+ it('adds one object every count, preserves every old placement and reloads identically',()=>{for(let n=0;n<=150;n++){const objects=mountainObjects(n);expect(objects).toHaveLength(n);expect(objects).toEqual(mountainObjects(n));if(n)expect(objects.slice(0,-1)).toEqual(mountainObjects(n-1));}});
  it('grows in height and width and bounds rendering above 100',()=>{const one=mountainObjects(1),hundred=mountainObjects(100);expect(Math.min(...hundred.map(o=>o.y))).toBeLessThan(one[0].y-200);expect(Math.max(...hundred.map(o=>o.x))-Math.min(...hundred.map(o=>o.x))).toBeGreaterThan(400);expect(mountainObjects(100000)).toHaveLength(400);expect(mountainObjects(-1)).toEqual([]);expect(mountainObjects(NaN)).toEqual([]);});
+});
+
+it('uses all 32 props and continues visible growth through 150',()=>{
+ const objects=mountainObjects(150);
+ expect(new Set(objects.map(o=>o.kind)).size).toBe(32);
+ for(const count of [100,125,150]){
+  expect(Math.min(...objects.slice(0,count).map(o=>o.y-o.size))).toBeLessThan(Math.min(...objects.slice(0,count-25).map(o=>o.y-o.size)));
+ }
+ expect(objects.slice(100).filter(o=>o.kind>=16).length).toBeGreaterThan(25);
+ expect(objects.slice(100).every(o=>o.y>0&&o.size>=106)).toBe(true);
 });

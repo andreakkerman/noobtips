@@ -3,7 +3,7 @@ export const WORLD_WIDTH = 960;
 export const WORLD_HEIGHT = 720;
 export const noise = (n: number) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 export interface Junk { id: number; x: number; y: number; size: number; angle: number; kind: number; depth: number }
-export interface MountainArt { atlas: HTMLImageElement; background: HTMLImageElement; shaded: HTMLCanvasElement }
+export interface MountainArt { atlases: HTMLImageElement[]; background: HTMLImageElement; shaded: HTMLCanvasElement[] }
 let artPromise: Promise<MountainArt> | undefined;
 export function loadMountainArt(): Promise<MountainArt> {
   if (!artPromise) {
@@ -11,11 +11,15 @@ export function loadMountainArt(): Promise<MountainArt> {
       const image = new Image(); image.onload = () => resolve(image); image.onerror = reject;
       image.src = `${import.meta.env.BASE_URL}art/mountain/${file}`;
     });
-    artPromise = Promise.all([load('junk-atlas.webp'),load('courtyard.webp')])
-      .then(([atlas,background]) => {
+    artPromise = Promise.all([load('junk-atlas.webp'),load('salvage-atlas.webp'),load('courtyard.webp')])
+      .then(([household,salvage,background]) => {
+        const atlases=[household,salvage];
+        const shaded=atlases.map(atlas=>{
         const shaded=document.createElement('canvas');shaded.width=atlas.width;shaded.height=atlas.height;
         const c=shaded.getContext('2d')!;c.drawImage(atlas,0,0);c.globalCompositeOperation='source-atop';c.fillStyle='#07363d88';c.fillRect(0,0,shaded.width,shaded.height);
-        return {atlas,background,shaded};
+        return shaded;
+        });
+        return {atlases,background,shaded};
       }).catch(error => { artPromise=undefined; throw error; });
   }
   return artPromise;
@@ -24,28 +28,39 @@ export function loadMountainArt(): Promise<MountainArt> {
 // precedes it, unlike random sprite scattering. Jitter never breaks that support.
 const slots = Array.from({length:42},(_,row) => Array.from({length:31},(_,col) => ({row,col:col-15}))).flat()
   .sort((a,b) => (Math.abs(a.col)*1.8+a.row*.95)-(Math.abs(b.col)*1.8+b.row*.95) || a.col-b.col);
+// Deposit-seeded choices: increasing the total never reshuffles earlier props.
+export function junkKind(id:number):number {
+  // A complete, interleaved introduction; then weighted seeded sampling.
+  if(id<32)return (id*13+15)%32;
+  if(id===49)return 18; // Dish above the first substantial mountain.
+  if(id===99)return 16; // Scanner mast becomes a late-stage skyline accent.
+  const salvageChance=id<100?.55:.78;
+  return (noise(id+91)<salvageChance?16:0)+Math.floor(noise(id+203)*16);
+}
 export function mountainObjects(count: number): Junk[] {
   const n = Number.isFinite(count) ? Math.max(0,Math.floor(count)) : 0;
   const core = slots.slice(0,Math.min(n,320)).map((slot,id) => ({
     id, x:480+slot.col*48+(noise(id+8)-.5)*17,
-    y:620-(slot.row===0?0:slot.row===1?19:44+(slot.row-2)*43)+(noise(id+12)-.5)*6,
-    size:id===0?32:id<5?44+noise(id)*15:[24,49,95,99].includes(id)?145:id%11===0?126:68+noise(id+3)*37,
+    y:620-(slot.row===0?0:slot.row===1?19:44+(slot.row-2)*33)+(noise(id+12)-.5)*6,
+    size:id===0?32:id<5?44+noise(id)*15:id>=100?106+noise(id+3)*48:[24,49,95,99].includes(id)?145:id%11===0?126:68+noise(id+3)*37,
     angle:(noise(id+4)-.5)*(id%16===1?.8:.55),
-    kind:id===0?15:id===24?3:id===49||id===99?0:id===95?1:(id*7+Math.floor(id/16)*3)%16,
+    kind:junkKind(id),
     depth:slot.row,
   }));
   // After the peak leaves the fixed frame, new arrivals accumulate on visible
   // shoulders. Keep only the latest 80 of these buried deposits in the render.
   for(let id=Math.max(320,n-80);id<n;id++) {
-    core.push({id,x:110+noise(id+8)*740,y:175+noise(id+3)*380,size:48+noise(id)*55,angle:(noise(id+4)-.5)*.8,kind:id%16,depth:0});
+    core.push({id,x:110+noise(id+8)*740,y:175+noise(id+3)*380,size:48+noise(id)*55,angle:(noise(id+4)-.5)*.8,kind:junkKind(id),depth:0});
   }
   return core;
 }
 export function drawJunk(c: CanvasRenderingContext2D, o: Junk, art: MountainArt, shade=0) {
-  const cell=art.atlas.width/4;
+  const bank=Math.floor(o.kind/16),kind=o.kind%16;
+  const atlas=shade?art.shaded[bank]:art.atlases[bank];
+  const cell=atlas.width/4;
   c.save();c.translate(o.x,o.y);c.rotate(o.angle);
   c.shadowColor='#001218b0';c.shadowBlur=o.size*.09;c.shadowOffsetX=-o.size*.04;c.shadowOffsetY=o.size*.06;
-  c.drawImage(shade?art.shaded:art.atlas,(o.kind%4)*cell,Math.floor(o.kind/4)*cell,cell,cell,-o.size/2,-o.size,o.size,o.size);
+  c.drawImage(atlas,(kind%4)*cell,Math.floor(kind/4)*cell,cell,cell,-o.size/2,-o.size,o.size,o.size);
   c.shadowColor='transparent';
   c.restore();
 }
@@ -61,8 +76,8 @@ function drawDeposit(c: CanvasRenderingContext2D,o:Junk,art:MountainArt) {
   // Two smaller interlocked items form the shadowed backing for larger deposits.
   // They share the deposit transform during entry, so no offcuts pop into place.
   if(o.id>4){
-    drawJunk(c,{...o,x:o.x-o.size*.22,y:o.y+5,size:o.size*.63,kind:(o.kind+5)%16,angle:o.angle-.35},art,1);
-    drawJunk(c,{...o,x:o.x+o.size*.27,y:o.y-3,size:o.size*.58,kind:(o.kind+9)%16,angle:o.angle+.4},art,1);
+    drawJunk(c,{...o,x:o.x-o.size*.22,y:o.y+5,size:o.size*.63,kind:(o.kind+5)%32,angle:o.angle-.35},art,1);
+    drawJunk(c,{...o,x:o.x+o.size*.27,y:o.y-3,size:o.size*.58,kind:(o.kind+9)%32,angle:o.angle+.4},art,1);
   }
   drawJunk(c,o,art);
 }
