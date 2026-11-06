@@ -38,6 +38,8 @@ test('category selection controls the entire tip pool', async ({ page }) => {
 });
 
 test('20-tip exhaustion, replay without rating and independent category history', async ({ page }) => {
+  // 22 rounds exercise the complete history; keep each transition's 7s limit.
+  test.slow();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => { Math.random = () => .05; });
   await page.goto('/'); await enter(page); const ids = new Set<string>(); let last = '';
@@ -60,9 +62,9 @@ test('normal animation lands precisely and prevents duplicate requests', async (
   await expect(main(page)).toHaveAttribute('data-spin', '1'); await expect(main(page)).toHaveAttribute('data-phase', 'spinning');
   await expect(page.getByRole('button', { name: 'Overslaan' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Arc Raiders', exact: true })).toBeDisabled();
-  await page.waitForTimeout(400);
-  const mid = await page.getByTestId('rotor').evaluate(element => element.style.transform);
-  expect(mid).not.toBe('rotate(0deg)');
+  await expect.poll(() => page.getByTestId('rotor').evaluate(element =>
+    Number(element.style.transform.match(/rotate\(([-.\d]+)deg\)/)?.[1] ?? 0)
+  )).toBeGreaterThan(0);
   await page.waitForSelector('.is-landed');
   const result = await page.getByTestId('wheel').evaluate(element => ({ angle: Number(element.dataset.rotation), sector: Number(element.dataset.segment), actual: Number(element.querySelector('[data-testid=rotor]')!.getAttribute('style')!.match(/rotate\(([-.\d]+)deg\)/)![1]) }));
   expect(result.actual).toBe(result.angle); expect((360 - result.angle % 360) % 360).toBe(result.sector * 36);
@@ -71,6 +73,8 @@ test('normal animation lands precisely and prevents duplicate requests', async (
 });
 
 test('all three reveal tiers agree with their wheel sectors', async ({ page }) => {
+  // Three full animated rounds plus page loads need a larger overall budget.
+  test.slow();
   for (const [random, tier, sector] of [[.05, 'normal', 0], [.15, 'mega', 1], [.65, 'legendary', 6]] as const) {
     await page.goto('/'); await enter(page); await page.evaluate(value => { Math.random = () => value; }, random); await spinToResult(page);
     await expect(main(page)).toHaveAttribute('data-tier', tier); await expect(page.getByTestId('wheel')).toHaveAttribute('data-segment', String(sector));

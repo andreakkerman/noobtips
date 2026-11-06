@@ -3,7 +3,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  workers: 3,
+  // WebKit competes heavily for CPU with concurrent browsers on hosted runners.
+  workers: process.env.CI ? 1 : 3,
   timeout: 30_000,
   expect: { timeout: 7_000 },
   reporter: [['list']],
