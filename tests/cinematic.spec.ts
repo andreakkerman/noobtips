@@ -33,18 +33,26 @@ test('reduced motion celebration preserves the menu destination and ignores doub
   await expect(page.locator('main')).toHaveAttribute('data-phase','ready');await expect(page.locator('main')).toHaveAttribute('data-spin','5');
   await expect(page.getByRole('button',{name:'Geef me een Noobtip!',exact:true})).toBeFocused();
 });
-for(const count of [1,25,100,150])test(`mountain ${count} establishes, replays on every visit and preserves pixels and events`,async({page})=>{
+for(const count of [1,11,75,100,150])test(`mountain ${count} establishes, replays on every visit and preserves pixels and events`,async({page})=>{
+  await page.clock.install({time:new Date('2026-11-06T12:00:00Z')});await page.clock.pauseAt(new Date('2026-11-06T12:00:01Z'));
   await page.goto('./');await page.evaluate(n=>localStorage.setItem('noobtips.ratings.v2',JSON.stringify(Array.from({length:n},(_,i)=>({id:`fixture-${i}`,tipId:'general-001',value:5})))),count);await page.reload();
   await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
   const saved=await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v2'));
   for(let visit=0;visit<2;visit++){
     await page.getByRole('button',{name:'TOP 20',exact:true}).click();const canvas=page.locator('.mountain-scene canvas');
     await expect(canvas).toHaveAttribute('data-entrance','establishing');
-    const initial=await canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL());
-    await page.waitForTimeout(650);await expect(canvas).toHaveAttribute('data-entrance','establishing');
-    await expect(canvas).toHaveAttribute('data-entrance','arriving');
+    const expected=await page.evaluate(async n=>{
+      const path='/src/game/mountain.ts';const {drawMountain,loadMountainArt}=await import(path);const art=await loadMountainArt();
+      const source=document.querySelector('.mountain-scene canvas') as HTMLCanvasElement;
+      const c=document.createElement('canvas');c.width=source.width;c.height=source.height;const ctx=c.getContext('2d')!;ctx.scale(c.width/960,c.height/720);
+      drawMountain(ctx,n-(n>=75?2:1),art);const initial=c.toDataURL();drawMountain(ctx,n,art);return {initial,final:c.toDataURL()};
+    },count);
+    expect(await canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL())).toBe(expected.initial);
+    await page.clock.runFor(650);await expect(canvas).toHaveAttribute('data-entrance','establishing');
+    await page.clock.runFor(450);await expect(canvas).toHaveAttribute('data-entrance','arriving');
+    await page.clock.runFor(2500);
     await expect(canvas).toHaveAttribute('data-entrance','settled');
-    expect(await canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL())).toBe(initial);
+    expect(await canvas.evaluate(c=>(c as HTMLCanvasElement).toDataURL())).toBe(expected.final);
     expect(await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v2'))).toBe(saved);
     await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
   }

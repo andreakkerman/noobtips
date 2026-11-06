@@ -17,9 +17,10 @@ export function Mountain({ count }: { count: number }) {
         const layer=()=>{const el=document.createElement('canvas');el.width=WORLD_WIDTH*ratio;el.height=WORLD_HEIGHT*ratio;const ctx=el.getContext('2d')!;ctx.scale(ratio,ratio);return {el,ctx};};
         const complete=layer();drawMountain(complete.ctx,count,art);
         const showComplete=()=>{c.clearRect(0,0,WORLD_WIDTH,WORLD_HEIGHT);c.drawImage(complete.el,0,0,WORLD_WIDTH,WORLD_HEIGHT);};
-        showComplete();setFailed(false);
         const recent=mountainObjects(count).slice(count>=75?-2:-1);
-        if(!recent.length||media.matches){el.dataset.entrance='settled';return;}
+        setFailed(false);
+        if(!recent.length||media.matches){showComplete();el.dataset.entrance='settled';return;}
+        drawMountain(c,count,art,undefined,'all',recent[0].id-1);
         el.dataset.entrance='establishing';
         // Wait for the fully rendered scene to paint before starting the hold.
         frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>{
@@ -30,9 +31,10 @@ export function Mountain({ count }: { count: number }) {
               if(cancelled)return;
               if(media.matches||index>=recent.length){showComplete();el.dataset.entrance='settled';return;}
               const object=recent[index],behind=layer(),front=layer();
-              drawMountain(behind.ctx,count,art,object.id,'behind');drawMountain(front.ctx,count,art,object.id,'front');
+              drawMountain(behind.ctx,count,art,object.id,'behind',object.id);drawMountain(front.ctx,count,art,object.id,'front',object.id);
               const start=performance.now(),duration=recent.length>1?850:1250;let impacted=false;
               el.dataset.entrance='arriving';
+              el.dataset.arrival=String(object.id);
               const draw=(now:number)=>{
                 if(cancelled)return;
                 const t=media.matches?1:Math.min(1,(now-start)/duration);
@@ -40,7 +42,12 @@ export function Mountain({ count }: { count: number }) {
                 drawArrival(c,object,art,t);c.drawImage(front.el,0,0,WORLD_WIDTH,WORLD_HEIGHT);
                 if(t>=.66&&!impacted&&!media.matches){impacted=true;stopImpact?.();stopImpact=arcadeAudio.junkImpact();}
                 if(t<1)frame=requestAnimationFrame(draw);
-                else {index++;drop();}
+                else {
+                  // Resolve cached alpha layers to the exact static stage before
+                  // the next drop; settled objects remain, future ones stay absent.
+                  drawMountain(c,count,art,undefined,'all',object.id);
+                  index++;drop();
+                }
               };
               frame=requestAnimationFrame(draw);
             };

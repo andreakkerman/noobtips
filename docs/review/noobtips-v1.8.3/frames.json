@@ -1,0 +1,176 @@
+[
+  {
+    "width": 1024,
+    "height": 768,
+    "count": 1,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:0",
+        "time": 1032
+      }
+    ],
+    "ratingCount": 1
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "count": 11,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:10",
+        "time": 1032
+      }
+    ],
+    "ratingCount": 11
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "count": 75,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:73",
+        "time": 1032
+      },
+      {
+        "key": "arriving:74",
+        "time": 1888
+      }
+    ],
+    "ratingCount": 75
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "count": 100,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:98",
+        "time": 1032
+      },
+      {
+        "key": "arriving:99",
+        "time": 1888
+      }
+    ],
+    "ratingCount": 100
+  },
+  {
+    "width": 1024,
+    "height": 768,
+    "count": 150,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:148",
+        "time": 1032
+      },
+      {
+        "key": "arriving:149",
+        "time": 1888
+      }
+    ],
+    "ratingCount": 150
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "count": 1,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:0",
+        "time": 1032
+      }
+    ],
+    "ratingCount": 1
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "count": 11,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:10",
+        "time": 1032
+      }
+    ],
+    "ratingCount": 11
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "count": 75,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:73",
+        "time": 1032
+      },
+      {
+        "key": "arriving:74",
+        "time": 1888
+      }
+    ],
+    "ratingCount": 75
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "count": 100,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:98",
+        "time": 1032
+      },
+      {
+        "key": "arriving:99",
+        "time": 1888
+      }
+    ],
+    "ratingCount": 100
+  },
+  {
+    "width": 768,
+    "height": 1024,
+    "count": 150,
+    "initialMatches": true,
+    "finalMatches": true,
+    "settledMaxChannelDifference": 0,
+    "frames": [
+      {
+        "key": "arriving:148",
+        "time": 1032
+      },
+      {
+        "key": "arriving:149",
+        "time": 1888
+      }
+    ],
+    "ratingCount": 150
+  }
+]

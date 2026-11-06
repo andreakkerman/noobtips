@@ -86,17 +86,20 @@ export function drawAtmosphere(c:CanvasRenderingContext2D,count:number) {
   for(let i=0;i<Math.min(65,8+count);i++){c.fillStyle=i%3?'#ffe4ab55':'#e8f0d833';c.beginPath();c.arc(100+noise(i+77)*760,140+noise(i+99)*480,.5+noise(i+4),0,Math.PI*2);c.fill();}
   const edge=c.createRadialGradient(480,330,240,480,330,650);edge.addColorStop(0,'#041a2000');edge.addColorStop(1,'#041a2077');c.fillStyle=edge;c.fillRect(0,0,960,720);
 }
-export function drawMountain(c:CanvasRenderingContext2D,count:number,art:MountainArt,arrivalId?:number,portion:'all'|'behind'|'front'='all') {
-  if(portion!=='front')drawEnvironment(c,art,count);
+export function drawMountain(c:CanvasRenderingContext2D,count:number,art:MountainArt,arrivalId?:number,portion:'all'|'behind'|'front'='all',visibleThrough=Infinity) {
+  const visibleCount=Math.min(count,visibleThrough+1);
+  if(portion!=='front')drawEnvironment(c,art,visibleCount);
   else c.clearRect(0,0,WORLD_WIDTH,WORLD_HEIGHT);
-  const objects=mountainObjects(count).sort((a,b)=>a.y-b.y || a.x-b.x);
+  // Filter the final deterministic object set, so future arrivals cannot leak
+  // into either cached layer and already settled deposits keep their positions.
+  const objects=mountainObjects(count).filter(o=>o.id<=visibleThrough).sort((a,b)=>a.y-b.y || a.x-b.x);
   const split=objects.findIndex(o=>o.id===arrivalId);
   objects.forEach((object,index)=>{
     if(portion==='behind'&&index>=split)return;
     if(portion==='front'&&index<=split)return;
     drawDeposit(c,object,art);
   });
-  if(portion!=='behind')drawAtmosphere(c,count);
+  if(portion!=='behind')drawAtmosphere(c,visibleCount);
 }
 export function landingPose(object:Junk,time:number):Junk {
   const t=Math.max(0,Math.min(1,time));const impact=.66;
