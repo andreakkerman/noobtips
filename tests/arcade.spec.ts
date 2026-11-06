@@ -25,7 +25,7 @@ async function spinToResult(page: Page) {
     });
     observer.observe(element, { attributes: true, attributeFilter: ['data-phase'] });
   });
-  await page.getByRole('button', { name: /^(DRAAI HET NOOBRAD!|NOG EEN KEER DRAAIEN!)$/ }).click();
+  await page.getByRole('button', { name: /^(Geef me een Noobtip!|Geef me nog een Noobtip!)$/ }).click();
   await expect(main(page)).toHaveAttribute('data-phase', 'rating');
   expect(await page.evaluate(() => (window as Window & { spinPhases?: string[] }).spinPhases))
     .toEqual(expect.arrayContaining(['spinning', 'revealing', 'rating']));
@@ -37,11 +37,14 @@ async function noOverflow(page: Page) {
 test('ready screen, default category and slogan', { tag: '@smoke' }, async ({ page, baseURL }) => {
   const external: string[] = []; page.on('request', request => { if (!request.url().startsWith(new URL(baseURL!).origin + '/') && !request.url().startsWith('data:')) external.push(request.url()); });
   await page.goto('./'); await enter(page);
+  await expect(page).toHaveTitle('Noobtips.nl');
+  await expect(page.locator('.spin-button > svg')).toHaveCount(1);
+  await expect(page.locator('.spin-button > svg:last-child path')).toHaveAttribute('d', 'M4 12h15m-6-6 6 6-6 6');
   await expect(page.getByRole('button', { name: 'Algemeen', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.category')).toHaveText(['Algemeen', 'Arc Raiders']);
   await expect(page.getByRole('button', { name: 'School', exact: true })).toHaveCount(0);
   await expect(page.locator('.slogan s')).toHaveText('niks');
-  await expect(page.getByRole('button', { name: 'DRAAI HET NOOBRAD!', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true })).toBeVisible();
   await noOverflow(page); expect(external).toEqual([]);
 });
 
@@ -66,7 +69,7 @@ test('20-tip exhaustion, replay without rating and independent category history'
   await page.addInitScript(() => { Math.random = () => .05; });
   await page.goto('./'); await enter(page); const ids = new Set<string>(); let last = '';
   for (let i = 0; i < 21; i++) {
-    await page.getByRole('button', { name: /^(DRAAI HET NOOBRAD!|NOG EEN KEER DRAAIEN!)$/ }).click();
+    await page.getByRole('button', { name: /^(Geef me een Noobtip!|Geef me nog een Noobtip!)$/ }).click();
     await expect(main(page)).toHaveAttribute('data-phase', 'rating');
     const id = await main(page).getAttribute('data-tip-id') as string;
     if (i < 20) { expect(ids.has(id)).toBe(false); ids.add(id); } else { expect(ids.has(id)).toBe(true); expect(id).not.toBe(last); }
@@ -74,13 +77,13 @@ test('20-tip exhaustion, replay without rating and independent category history'
   }
   expect(ids.size).toBe(20);
   await page.getByRole('button', { name: 'TERUG NAAR HOOFDMENU' }).click(); await page.getByRole('button', { name: 'Arc Raiders', exact: true }).click();
-  await page.getByRole('button', { name: 'DRAAI HET NOOBRAD!', exact: true }).click(); await expect(main(page)).toHaveAttribute('data-phase', 'rating');
+  await page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true }).click(); await expect(main(page)).toHaveAttribute('data-phase', 'rating');
   expect(await main(page).getAttribute('data-tip-id')).toMatch(/^arc-/);
 });
 
 test('normal animation lands precisely and prevents duplicate requests', { tag: '@smoke' }, async ({ page }) => {
   await page.addInitScript(() => { Math.random = () => .65; }); await page.goto('./'); await enter(page);
-  await page.getByRole('button', { name: 'DRAAI HET NOOBRAD!', exact: true }).evaluate(button => { (button as HTMLButtonElement).click(); (button as HTMLButtonElement).click(); (button as HTMLButtonElement).click(); });
+  await page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true }).evaluate(button => { (button as HTMLButtonElement).click(); (button as HTMLButtonElement).click(); (button as HTMLButtonElement).click(); });
   await expect(main(page)).toHaveAttribute('data-spin', '1'); await expect(main(page)).toHaveAttribute('data-phase', 'spinning');
   await expect(page.getByRole('button', { name: 'Overslaan' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Arc Raiders', exact: true })).toBeDisabled();
@@ -100,7 +103,11 @@ test('all three reveal tiers agree with their wheel sectors', { tag: '@smoke' },
   for (const [random, tier, sector] of [[.05, 'normal', 0], [.15, 'mega', 1], [.65, 'legendary', 6]] as const) {
     await page.goto('./'); await enter(page); await page.evaluate(value => { Math.random = () => value; }, random); await spinToResult(page);
     await expect(main(page)).toHaveAttribute('data-tier', tier); await expect(page.getByTestId('wheel')).toHaveAttribute('data-segment', String(sector));
-    await expect(page.locator('.reveal-title')).toBeVisible();
+    await expect(page.locator('.reveal-scene .reveal-title, .reveal-scene .reveal-emblem')).toHaveCount(0);
+    await expect(page.locator('.tip-text')).toBeVisible();
+    await expect(page.locator('.replay-button')).toHaveText('Geef me nog een Noobtip!');
+    await expect(page.locator('.replay-button > svg')).toHaveCount(1);
+    await expect(page.locator('.replay-button > svg:last-child path')).toHaveAttribute('d', 'M4 12h15m-6-6 6 6-6 6');
   }
 });
 
@@ -141,10 +148,10 @@ test('corrupted storage and unavailable storage never block playing', async ({ p
 
 test('reduced motion completes promptly, removes particles and survives mid-spin reload', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' }); await page.goto('./'); await enter(page);
-  await page.getByRole('button', { name: 'DRAAI HET NOOBRAD!', exact: true }).click();
+  await page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true }).click();
   await expect(main(page)).toHaveAttribute('data-phase', 'rating', { timeout: 1200 }); await expect(page.locator('.particles')).toBeHidden();
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.getByRole('button', { name: 'NOG EEN KEER DRAAIEN!' }).click(); await page.reload(); await enter(page);
+  await page.getByRole('button', { name: 'Geef me nog een Noobtip!' }).click(); await page.reload(); await enter(page);
   await expect(main(page)).toHaveAttribute('data-phase', 'ready'); await spinToResult(page);
 });
 
@@ -158,7 +165,7 @@ test('welcome unlocks audio and mute survives replay and menu navigation', { tag
   if (supported) {
     await expect(page.getByRole('button', { name: 'Geluid uitzetten' })).toHaveAttribute('aria-pressed', 'true');
     await spinToResult(page);
-    await page.getByRole('button', { name: 'NOG EEN KEER DRAAIEN!' }).click();
+    await page.getByRole('button', { name: 'Geef me nog een Noobtip!' }).click();
     await expect(main(page)).toHaveAttribute('data-phase', 'rating');
     await expect(page.getByRole('button', { name: 'Geluid uitzetten' })).toHaveAttribute('aria-pressed', 'true');
     await page.getByRole('button', { name: 'Geluid uitzetten' }).click();
@@ -182,7 +189,7 @@ test('audio resume rejection does not falsely enable sound or block entry', asyn
 test('longest tips and full bins fit the viewport', async ({ page }) => {
   await page.goto('./'); await enter(page); await page.evaluate(() => { Math.random = () => .6; }); await spinToResult(page);
   await page.getByRole('radio', { name: /^5 van 5/ }).click(); await page.mouse.move(0, 0); await page.waitForTimeout(600); await noOverflow(page);
-  const action = await page.getByRole('button', { name: 'NOG EEN KEER DRAAIEN!' }).boundingBox();
+  const action = await page.getByRole('button', { name: 'Geef me nog een Noobtip!' }).boundingBox();
   const footer = await page.locator('.footer').boundingBox(); expect(action!.y + action!.height).toBeLessThan(footer!.y);
   const tip = await page.locator('.tip-text').boundingBox(); const rating = await page.locator('.rating-question').boundingBox(); expect(tip!.y + tip!.height).toBeLessThan(rating!.y);
 });
@@ -190,9 +197,9 @@ test('longest tips and full bins fit the viewport', async ({ page }) => {
 test('touch targets respond to real taps', async ({ page }, testInfo) => {
   test.skip(!testInfo.project.use.hasTouch, 'Touch emulation project only');
   await page.goto('./'); await enter(page); await page.getByRole('button', { name: 'Arc Raiders', exact: true }).tap();
-  await page.getByRole('button', { name: 'DRAAI HET NOOBRAD!', exact: true }).tap(); await expect(main(page)).toHaveAttribute('data-phase', 'rating');
+  await page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true }).tap(); await expect(main(page)).toHaveAttribute('data-phase', 'rating');
   await page.getByRole('radio', { name: /^5 van 5/ }).tap(); await expect(page.locator('.trash-object.overloaded')).toHaveCount(5);
-  await page.getByRole('button', { name: 'NOG EEN KEER DRAAIEN!' }).tap(); await expect(main(page)).toHaveAttribute('data-phase', 'spinning');
+  await page.getByRole('button', { name: 'Geef me nog een Noobtip!' }).tap(); await expect(main(page)).toHaveAttribute('data-phase', 'spinning');
 });
 
 

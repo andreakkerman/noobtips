@@ -546,7 +546,7 @@
   }
 }
 
-/* 1.3: the tip leads; classification is supporting information. */
+/* The tip leads the result composition. */
 .reveal-title { font-size: clamp(24px,2.76vw,37px); }
 .tip-text { font-size: clamp(33px,3.36vw,46px); }
 .tip-wrap { max-width: 900px; }
@@ -554,3 +554,7 @@
 @media(max-width:1150px) { .reveal-title { font-size: 33px; } .tip-text { font-size: 35px; } .tip-wrap { max-width: 790px; } .tip-text.tip-long { font-size: 33px; } }
 @media(max-height:740px) and (min-width:801px) { .reveal-title { font-size: 29px; } .tip-text { font-size: 34px; } .tip-text.tip-long { font-size: 31px; } }
 @media(max-width:800px) { .reveal-title { font-size: 27px; } .tip-text { font-size: 31px; } .tip-text.tip-long { font-size: 29px; } }
+
+/* 1.5: center the tip/rating group without reserving space for a tier heading. */
+.reveal-content { padding-top: 0; }
+.tip-wrap { margin-top: 0; }

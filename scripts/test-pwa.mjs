@@ -7,7 +7,7 @@ import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 
 const smoke = process.argv.includes('--smoke');
-const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.4');
+const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.5');
 // Last-resort bound also covers browser protocol calls and teardown.
 const deadline = setTimeout(() => { console.error('PWA suite exceeded its hard deadline'); process.exit(1); }, smoke ? 180_000 : 300_000);
 await mkdir(output, { recursive: true });
@@ -82,7 +82,7 @@ try {
   for(const name of ['Algemeen','Arc Raiders']) {
     await page.getByRole('button',{name,exact:true}).click();
     if(name==='Arc Raiders') assert(await page.evaluate(async()=> (await fetch(new URL('art/arc-raiders-winter.webp',location.href))).ok));
-    await page.getByRole('button',{name:'DRAAI HET NOOBRAD!',exact:true}).click();await phase(page,'rating');
+    await page.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await phase(page,'rating');
     await page.getByRole('radio',{name:/^4 van 5/}).click();
     await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
   }
@@ -94,7 +94,7 @@ try {
   await page.getByRole('button',{name:'Arc Raiders',exact:true}).click();
   await page.getByRole('button',{name:'Geluid uitzetten'}).click();
   const before=await cacheNames(page);
-  await page.getByRole('button',{name:'DRAAI HET NOOBRAD!',exact:true}).click();await phase(page,'spinning');
+  await page.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await phase(page,'spinning');
   serving=builds.b;await checkUpdate(page);await waitUpdate(page);
   await phase(page,'revealing');assert.deepEqual(await cacheNames(page).then(k=>k.filter(x=>before.includes(x))),before);
   await phase(page,'rating');await page.getByRole('radio',{name:/^5 van 5/}).click();
@@ -113,13 +113,13 @@ try {
   await page.getByRole('button',{name:'Geluid aanzetten'}).click();
   assert.equal(await page.getByRole('button',{name:'Geluid uitzetten'}).getAttribute('aria-pressed'),'true');
   const second=await context.newPage();await second.goto(url);await workerReady(second);
-  await second.getByRole('button',{name:'SPELEN!',exact:true}).click();await second.getByRole('button',{name:'DRAAI HET NOOBRAD!',exact:true}).click();
+  await second.getByRole('button',{name:'SPELEN!',exact:true}).click();await second.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();
   serving=builds.c;await checkUpdate(page);await waitUpdate(page);await phase(second,'rating');
   await page.waitForTimeout(500);assert(await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting)));
   await second.close();await page.bringToFront();await page.evaluate(()=>window.dispatchEvent(new Event('online')));
   await until(()=>page.evaluate(async()=>!(await navigator.serviceWorker.getRegistration()).waiting).catch(()=>false),'update after other window closed');
   await phase(page,'ready');
-  await page.getByRole('button',{name:'DRAAI HET NOOBRAD!',exact:true}).click();
+  await page.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();
   await phase(page,'rating');
   assert.equal(await page.getByRole('button',{name:'Geluid uitzetten'}).getAttribute('aria-pressed'),'true');
   await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
@@ -153,17 +153,20 @@ try {
   for(const [width,height] of [[1024,768],[1280,800],[1366,768]]) {
     const c=await newContext({viewport:{width,height}});const p=await c.newPage();
     await p.goto(url);await workerReady(p);
+    await p.getByRole('button',{name:'SPELEN!',exact:true}).click();await phase(p,'ready');
+    await p.screenshot({path:path.join(output,`${width}x${height}-ready.png`),animations:'disabled'});
     for(const [label,tip] of [['short',tips[0]],['long',tips.at(-1)]]) {
       await p.evaluate(({tip,ids})=>{localStorage.setItem('noobtips.history.v1',JSON.stringify({[tip.category]:ids.filter(id=>id!==tip.id)}));}, {tip,ids:tips.filter(t=>t.category===tip.category).map(t=>t.id)});
       await p.reload();await p.getByRole('button',{name:'SPELEN!',exact:true}).click();
       await p.getByRole('button',{name:{arc:'Arc Raiders',school:'School',general:'Algemeen'}[tip.category],exact:true}).click();
       await p.evaluate(()=>{Math.random=()=>.25;});
-      await p.getByRole('button',{name:'DRAAI HET NOOBRAD!',exact:true}).click();await phase(p,'rating');await p.waitForTimeout(500);
+      await p.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await phase(p,'rating');await p.waitForTimeout(500);
       assert.equal(await p.locator('.tip-text').textContent(),tip.text);
-      assert.equal(await p.locator('.reveal-title').textContent(),'KANSLOOS');
+      assert.equal(await p.locator('.reveal-title, .reveal-emblem').count(),0);
+      assert.equal(await p.locator('[data-testid=wheel]').getAttribute('data-segment'),'2');
       assert(!(await p.locator('main').textContent()).includes('KANSSLOOS'));
-      const metrics=await p.evaluate(()=>{const tip=document.querySelector('.tip-text');const title=document.querySelector('.reveal-title');const button=document.querySelector('.menu-button');const rating=document.querySelector('.rating-question');return {tip:parseFloat(getComputedStyle(tip).fontSize),title:parseFloat(getComputedStyle(title).fontSize),bottom:button.getBoundingClientRect().bottom,height:innerHeight,tipBottom:tip.getBoundingClientRect().bottom,ratingTop:rating.getBoundingClientRect().top,overflow:document.documentElement.scrollHeight>innerHeight||document.documentElement.scrollWidth>innerWidth,internalScroll:document.querySelector('main').scrollTop,headerTop:document.querySelector('.topbar').getBoundingClientRect().top};});
-      assert(metrics.tip>metrics.title);assert(!metrics.overflow);assert.equal(metrics.internalScroll,0);assert(metrics.headerTop>=0);assert(metrics.bottom<metrics.height);assert(metrics.tipBottom<metrics.ratingTop);
+      const metrics=await p.evaluate(()=>{const tip=document.querySelector('.tip-text');const button=document.querySelector('.menu-button');const rating=document.querySelector('.rating-question');return {tip:parseFloat(getComputedStyle(tip).fontSize),bottom:button.getBoundingClientRect().bottom,height:innerHeight,tipBottom:tip.getBoundingClientRect().bottom,ratingTop:rating.getBoundingClientRect().top,overflow:document.documentElement.scrollHeight>innerHeight||document.documentElement.scrollWidth>innerWidth,internalScroll:document.querySelector('main').scrollTop,headerTop:document.querySelector('.topbar').getBoundingClientRect().top};});
+      assert(metrics.tip>=33);assert(!metrics.overflow);assert.equal(metrics.internalScroll,0);assert(metrics.headerTop>=0);assert(metrics.bottom<metrics.height);assert(metrics.tipBottom<metrics.ratingTop);
       const filename=`${width}x${height}-${label}-tip.png`;await p.screenshot({path:path.join(output,filename)});report.screenshots.push({filename,tipId:tip.id,metrics});
     }
     await c.close();
@@ -171,13 +174,13 @@ try {
   const portraitContext=await newContext({viewport:{width:768,height:1024},hasTouch:true});
   const portrait=await portraitContext.newPage();await portrait.goto(url);
   await portrait.getByRole('button',{name:'SPELEN!',exact:true}).click();
-  await portrait.getByRole('button',{name:'DRAAI HET NOOBRAD!',exact:true}).click();await phase(portrait,'rating');
+  await portrait.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await phase(portrait,'rating');
   await portrait.getByRole('radio',{name:/^4 van 5/}).click();
   await portrait.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();await phase(portrait,'ready');
   await portrait.setViewportSize({width:1024,height:768});await portrait.waitForTimeout(800);
   assert(await portrait.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await portraitContext.close();check('Portrait play and rotation back to landscape work without an orientation lock.');
-  check('Short/long retained tips captured at all three resolutions; dominant typography, KANSLOOS consistency, controls and no overflow verified.');
+  check('Short/long retained tips captured at all three resolutions; dominant tip typography, no result classification, unchanged wheel sectors, controls and no overflow verified.');
   }
   serving=builds.root;
   const rootContext=await newContext();const rootPage=await rootContext.newPage();

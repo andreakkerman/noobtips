@@ -148,7 +148,7 @@ export default function App() {
           <div className="categories" role="group" aria-label="Kies je onderwerp">{categories.map(c => <button type="button" key={c.id} className={`category ${c.id === game.category ? 'selected' : ''}`} aria-pressed={c.id === game.category} disabled={busy} onClick={() => changeCategory(c.id)}><Icon name={c.icon} /><span>{c.name}</span>{c.id === game.category && <i />}</button>)}</div>
         </div>
         <div className="launch-section">
-          <button type="button" ref={spinButton} className="primary-button spin-button" disabled={game.phase === 'spinning'} onClick={spin}><Icon name={game.phase === 'spinning' ? 'orbit' : 'rotate'} /><span>{game.phase === 'spinning' ? (game.landed ? 'DAAR KOMT IE…' : 'HET RAD DRAAIT…') : 'DRAAI HET NOOBRAD!'}</span><Icon name="arrow" /></button>
+          <button type="button" ref={spinButton} className="primary-button spin-button" disabled={game.phase === 'spinning'} onClick={spin}><span>{game.phase === 'spinning' ? (game.landed ? 'DAAR KOMT IE…' : 'HET RAD DRAAIT…') : 'Geef me een Noobtip!'}</span><Icon name="arrow" /></button>
         </div>
       </div>
       <div ref={stage} className="machine-area"><Wheel game={game} reduced={reduced} onLand={onLand} /></div>
@@ -156,12 +156,10 @@ export default function App() {
         <div className="reveal-rays" aria-hidden="true" /><div className="reveal-glow" aria-hidden="true" /><Particles tier={result.tier} />
         <div className="result-meta"><span><Icon name={category.icon} />{category.name}</span></div>
         <div className="reveal-content">
-          <div className="reveal-emblem"><Icon name={result.tier === 'legendary' ? 'crown' : result.tier === 'mega' ? 'bolt' : 'spark'} /></div>
-          <div className="reveal-title">{segments[result.segment].label}</div>
           <div className="tip-wrap"><span className="quote-mark" aria-hidden="true">“</span><h2 ref={tipHeading} tabIndex={-1} className={`tip-text ${result.tip.text.length > 110 ? 'tip-long' : ''}`}>{result.tip.text}</h2></div>
           <div className="result-actions" inert={game.phase !== 'rating'} aria-hidden={game.phase !== 'rating'}>
             <TrashRating key={result.tip.id} value={ratings[result.tip.id] ?? 0} onChange={rate} persisted={persisted} />
-            <button type="button" className="primary-button replay-button" onClick={spin}><Icon name="rotate" /><span>NOG EEN KEER DRAAIEN!</span><Icon name="arrow" /></button>
+            <button type="button" className="primary-button replay-button" onClick={spin}><span>Geef me nog een Noobtip!</span><Icon name="arrow" /></button>
             <button type="button" className="menu-button" onClick={backToMenu}>TERUG NAAR HOOFDMENU</button>
           </div>
         </div>

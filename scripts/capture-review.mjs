@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 import { mkdir, writeFile, rename } from 'node:fs/promises';
 import path from 'node:path';
 
-const directory = path.resolve('docs/review/noobtips-v1.4');
+const directory = path.resolve('docs/review/noobtips-v1.5');
 await mkdir(directory, { recursive: true });
 const browser = await chromium.launch();
 const report = { capturedAt: new Date().toISOString(), browser: browser.version(), captures: [], errors: [], animation: {} };
@@ -28,14 +28,14 @@ try {
     await page.getByRole('button', { name: 'SPELEN!', exact: true }).click();
     await page.waitForTimeout(700);
     await capture('01-ready');
-    await page.getByRole('button', { name: 'DRAAI HET NOOBRAD!', exact: true }).click();
+    await page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true }).click();
     await page.waitForTimeout(800); await capture('02-spinning');
     await page.waitForSelector('.is-landed'); await capture('03-landed');
     await page.waitForSelector('[data-phase="revealing"]'); await page.waitForTimeout(380); await capture('04-revealing');
     await page.waitForSelector('[data-phase="rating"]'); await page.waitForTimeout(500); await capture('05-tip');
     await page.getByRole('radio', { name: /^3 van 5/ }).click(); await page.mouse.move(1,1); await page.waitForTimeout(650); await capture('06-rating-three');
     await page.getByRole('radio', { name: /^5 van 5/ }).click(); await page.mouse.move(1,1); await page.waitForTimeout(650); await capture('07-rating-five');
-    await page.getByRole('button', { name: 'NOG EEN KEER DRAAIEN!' }).click(); await page.waitForTimeout(500); await capture('08-replay');
+    await page.getByRole('button', { name: 'Geef me nog een Noobtip!' }).click(); await page.waitForTimeout(500); await capture('08-replay');
     await page.waitForSelector('[data-phase="rating"]'); await page.waitForTimeout(1000);
     await page.getByRole('button', { name: 'TERUG NAAR HOOFDMENU' }).click();
     await page.waitForTimeout(700); await capture('09-menu');
@@ -64,7 +64,7 @@ try {
     };
     requestAnimationFrame(track);
   });
-  await page.getByRole('button', { name: 'DRAAI HET NOOBRAD!', exact: true }).click();
+  await page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true }).click();
   await page.waitForSelector('[data-phase="rating"]');
   report.animation = await page.evaluate(() => {
     const frames = window.__frames.toSorted((a,b) => a-b);

@@ -42,7 +42,7 @@ pnpm build
 pnpm preview
 ```
 
-`pnpm dev` blijft de gewone ontwikkelomgeving. De service worker wordt alleen in productiebouw geregistreerd. `pnpm test:pwa` bouwt geïsoleerde versies onder `.runtime/`, start tijdelijk een lokale statische testserver op 4174 en sluit die na afloop. De test bewaart screenshots en rapport in `docs/review/noobtips-v1.4/`.
+`pnpm dev` blijft de gewone ontwikkelomgeving. De service worker wordt alleen in productiebouw geregistreerd. `pnpm test:pwa` bouwt geïsoleerde versies onder `.runtime/`, start tijdelijk een lokale statische testserver op 4174 en sluit die na afloop. De test bewaart screenshots en rapport in `docs/review/noobtips-v1.5/`.
 
 Een GitHub-projectpad lokaal controleren (hoofdletters moeten overeenkomen met de repositorynaam):
 
