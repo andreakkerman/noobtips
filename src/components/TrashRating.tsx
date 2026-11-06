@@ -3,7 +3,7 @@ import { Icon } from './Icon';
 
 const labels = ['Een beetje nutteloos', 'Behoorlijk waardeloos', 'Prachtige onzin', 'Ongekend kansloos', 'Glorieus waardeloos!'];
 
-function Bin({ filled, overloaded, index, animation }: { filled: boolean; overloaded: boolean; index: number; animation: number }) {
+export function Bin({ filled, overloaded, index, animation }: { filled: boolean; overloaded: boolean; index: number; animation: number }) {
   const id = useId().replaceAll(':', '');
   return <svg className={`trash-object ${filled ? 'filled' : ''} ${overloaded ? 'overloaded' : ''}`} viewBox="0 0 110 125" aria-hidden="true" style={{ '--delay': `${index * 55}ms` } as CSSProperties}>
     <defs>

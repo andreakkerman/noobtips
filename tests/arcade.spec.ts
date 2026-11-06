@@ -1,3 +1,4 @@
+import { tips } from '../src/data/tips';
 import { test, expect, type Page } from '@playwright/test';
 
 test.beforeEach(async ({ page }, testInfo) => {
@@ -62,20 +63,21 @@ test('category selection controls the entire tip pool', { tag: '@smoke' }, async
   }
 });
 
-test('20-tip exhaustion, replay without rating and independent category history', async ({ page }) => {
-  // 22 rounds exercise the complete history; keep each transition's 7s limit.
+test('Full-pool exhaustion, replay without rating and independent category history', async ({ page }) => {
+  // All category rounds exercise the complete history; keep each transition's 7s limit.
   test.slow();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => { Math.random = () => .05; });
   await page.goto('./'); await enter(page); const ids = new Set<string>(); let last = '';
-  for (let i = 0; i < 21; i++) {
+  const pool = tips.filter(t => t.category === 'general');
+  for (let i = 0; i <= pool.length; i++) {
     await page.getByRole('button', { name: /^(Geef me een Noobtip!|Geef me nog een Noobtip!)$/ }).click();
     await expect(main(page)).toHaveAttribute('data-phase', 'rating');
     const id = await main(page).getAttribute('data-tip-id') as string;
-    if (i < 20) { expect(ids.has(id)).toBe(false); ids.add(id); } else { expect(ids.has(id)).toBe(true); expect(id).not.toBe(last); }
+    if (i < pool.length) { expect(ids.has(id)).toBe(false); ids.add(id); } else { expect(ids.has(id)).toBe(true); expect(id).not.toBe(last); }
     last = id;
   }
-  expect(ids.size).toBe(20);
+  expect(ids.size).toBe(pool.length);
   await page.getByRole('button', { name: 'TERUG NAAR HOOFDMENU' }).click(); await page.getByRole('button', { name: 'Arc Raiders', exact: true }).click();
   await page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true }).click(); await expect(main(page)).toHaveAttribute('data-phase', 'rating');
   expect(await main(page).getAttribute('data-tip-id')).toMatch(/^arc-/);
@@ -123,7 +125,7 @@ test('rating fills, changes, overloads, and persists after reload', { tag: '@smo
   await page.reload(); await enter(page); await expect(main(page)).toHaveAttribute('data-phase', 'ready');
   expect(await page.evaluate(key => JSON.parse(localStorage.getItem('noobtips.ratings.v1')!)[key!], id)).toBe(2);
   // Make that previously rated tip the only unseen member of its category.
-  await page.evaluate(key => { localStorage.setItem('noobtips.history.v1', JSON.stringify({ general: Array.from({ length: 20 }, (_, i) => `general-${String(i + 1).padStart(3, '0')}`).filter(value => value !== key) })); }, id);
+  await page.evaluate(({ key, ids }) => { localStorage.setItem('noobtips.history.v1', JSON.stringify({ general: ids.filter(value => value !== key) })); }, { key: id, ids: tips.filter(t => t.category === 'general').map(t => t.id) });
   await page.reload(); await enter(page); await spinToResult(page); await expect(main(page)).toHaveAttribute('data-tip-id', id!);
   await expect(page.getByRole('radio', { name: /^2 van 5/ })).toHaveAttribute('aria-checked', 'true');
 });

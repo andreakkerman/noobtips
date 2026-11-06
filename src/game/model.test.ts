@@ -4,27 +4,27 @@ import { chooseSegment, initialState, landingRotation, segmentAtPointer, segment
 import { HISTORY_KEY, RATINGS_KEY, loadHistory, loadRatings, save, type StorageLike } from './storage';
 
 describe('Dutch content and shuffle bags', () => {
-  it('keeps 60 stored tips and only 40 active tips in the requested category order', () => {
-    expect(allTips).toHaveLength(60);
+  it('keeps 80 stored tips and 60 active tips in the requested category order', () => {
+    expect(allTips).toHaveLength(80);
     expect(allTips.filter(t => t.category === 'school')).toHaveLength(20);
-    expect(tips).toHaveLength(40);
+    expect(tips).toHaveLength(60);
     expect(categories.map(c => c.id)).toEqual(['general', 'arc']);
     expect(tips.some(t => (t.category as string) === 'school')).toBe(false);
     expect(new Set(tips.map(t => t.id)).size).toBe(tips.length);
-    categories.forEach(c => expect(tips.filter(t => t.category === c.id).length).toBeGreaterThanOrEqual(20));
+    categories.forEach(c => expect(tips.filter(t => t.category === c.id).length).toBe(30));
   });
   it.each(categories)('exhausts $name without repeats and avoids a boundary repeat', category => {
     let history: History = {}; let last = '';
     for (let cycle = 0; cycle < 3; cycle++) {
       const seen = new Set<string>();
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < tips.filter(t => t.category === category.id).length; i++) {
         const selection = selectTip(category.id, history, () => .37);
         expect(selection.tip.category).toBe(category.id);
         expect(selection.tip.id).not.toBe(last);
         expect(seen.has(selection.tip.id)).toBe(false);
         seen.add(selection.tip.id); last = selection.tip.id; history = selection.history;
       }
-      expect(seen.size).toBe(20);
+      expect(seen.size).toBe(tips.filter(t => t.category === category.id).length);
     }
   });
   it('keeps independent histories while switching categories', () => {

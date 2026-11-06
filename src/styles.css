@@ -1,5 +1,6 @@
 @import './styles/reveal.css';
 @import './styles/rating.css';
+@import './styles/leaderboard.css';
 :root {
   font-family: 'Outfit',sans-serif;
   color: #f6efd9;

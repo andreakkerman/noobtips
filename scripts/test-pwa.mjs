@@ -7,7 +7,7 @@ import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 
 const smoke = process.argv.includes('--smoke');
-const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.5');
+const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.6');
 // Last-resort bound also covers browser protocol calls and teardown.
 const deadline = setTimeout(() => { console.error('PWA suite exceeded its hard deadline'); process.exit(1); }, smoke ? 180_000 : 300_000);
 await mkdir(output, { recursive: true });
@@ -88,6 +88,15 @@ try {
   }
   await page.reload();await phase(page,'welcome');
   const saved=await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v1'));assert.equal(Object.keys(JSON.parse(saved)).length,2);
+  await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
+  await page.getByRole('button',{name:'TOP 20',exact:true}).click();
+  assert.equal(await page.locator('.leaderboard-row').count(),2);
+  for(const [id,rating] of Object.entries(JSON.parse(saved))) {
+    assert.equal(await page.locator(`.leaderboard-row[data-tip-id="${id}"]`).getAttribute('data-rating'),String(rating));
+  }
+  await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU',exact:true}).click();await phase(page,'ready');
+  await page.reload();await phase(page,'welcome');
+  check('Personal Top 20 opens offline with the persisted ratings and returns directly to the wheel.');
   check('Offline cold reload, both active categories, full spins and local ratings work from the production cache.');
   await context.setOffline(false);
   await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
@@ -116,7 +125,12 @@ try {
   await second.getByRole('button',{name:'SPELEN!',exact:true}).click();await second.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();
   serving=builds.c;await checkUpdate(page);await waitUpdate(page);await phase(second,'rating');
   await page.waitForTimeout(500);assert(await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting)));
+  await page.getByRole('button',{name:'TOP 20',exact:true}).click();
   await second.close();await page.bringToFront();await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+  await page.waitForTimeout(500);await phase(page,'leaderboard');
+  assert(await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting)));
+  assert.equal(await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v1')),rated);
+  await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU',exact:true}).click();
   await until(()=>page.evaluate(async()=>!(await navigator.serviceWorker.getRegistration()).waiting).catch(()=>false),'update after other window closed');
   await phase(page,'ready');
   await page.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();
@@ -125,6 +139,7 @@ try {
   await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
   check('Sound-on preference re-unlocks Web Audio on the first spin after an update reload.');
   check('A second open game window blocks cache activation; closing it allows an idle foreground update.');
+  check('An open Top 20 also defers the pending update until returning to the main menu, preserving ratings.');
   const stable = await cacheNames(page);
   broken=true; serving=builds.d;
   await page.evaluate(async()=>{

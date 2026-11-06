@@ -4,7 +4,7 @@ De repository is gekoppeld aan `andreakkerman/noobtips`; pushes naar `main` publ
 
 ## Snelle publicatie en volledige regressie
 
-De Pages-workflow draait unit-tests, bouwt `dist/` met het door Pages bepaalde basispad en test die productieversie met zes bestaande gameplay-scenario's in Chromium en WebKit (12 tests). Functionele checks gebruiken reduced motion; de echte animatie, exacte landing, reveal en bescherming tegen dubbele klikken blijven getest. De PWA-smoketest controleert offline spelen, manifest/assets/iconen, veilige updates, meerdere vensters, mislukte cache-installatie en ratingbehoud, zowel op een projectpad als op `/`. Alleen uitgebreide layout-screenshots en rotatie blijven buiten deze snelle selectie.
+De Pages-workflow draait unit-tests, bouwt `dist/` met het door Pages bepaalde basispad en test die productieversie met acht gameplay- en Top 20-scenario's in Chromium en WebKit (16 tests). Functionele checks gebruiken reduced motion; de echte animatie, exacte landing, reveal en bescherming tegen dubbele klikken blijven getest. De PWA-smoketest controleert offline spelen, manifest/assets/iconen, veilige updates, meerdere vensters, mislukte cache-installatie en ratingbehoud, zowel op een projectpad als op `/`. Alleen uitgebreide layout-screenshots en rotatie blijven buiten deze snelle selectie.
 
 Lokaal dezelfde selectie uitvoeren:
 
@@ -42,7 +42,7 @@ pnpm build
 pnpm preview
 ```
 
-`pnpm dev` blijft de gewone ontwikkelomgeving. De service worker wordt alleen in productiebouw geregistreerd. `pnpm test:pwa` bouwt geïsoleerde versies onder `.runtime/`, start tijdelijk een lokale statische testserver op 4174 en sluit die na afloop. De test bewaart screenshots en rapport in `docs/review/noobtips-v1.5/`.
+`pnpm dev` blijft de gewone ontwikkelomgeving. De service worker wordt alleen in productiebouw geregistreerd. `pnpm test:pwa` bouwt geïsoleerde versies onder `.runtime/`, start tijdelijk een lokale statische testserver op 4174 en sluit die na afloop. De test bewaart screenshots en rapport in `docs/review/noobtips-v1.6/`.
 
 Een GitHub-projectpad lokaal controleren (hoofdletters moeten overeenkomen met de repositorynaam):
 
@@ -121,7 +121,7 @@ De manifest gebruikt standalone-modus, eigen 192/512px-iconen, een maskable icoo
 
 `scripts/pwa/build.ts` maakt na elke productiebouw een manifest en service worker met een inhoudshash van de complete distributie. De cache bevat HTML, JavaScript/tips, CSS, alle lokale fonts, beide omgevingen en iconen. Geluiden worden lokaal met Web Audio gesynthetiseerd. Als één bestand niet geladen kan worden, faalt de nieuwe installatie en blijft de vorige complete versie bruikbaar.
 
-De app controleert op een nieuwe worker bij starten, terugkeer naar de voorgrond, opnieuw online komen en iedere vijf minuten zolang de app zichtbaar is. Een nieuwe worker blijft wachten tijdens draaien, onthullen en beoordelen. Welkom en hoofdmenu zijn veilige momenten. Bij meerdere open vensters wordt activering uitgesteld; sluit andere Noobtips-tabbladen/vensters om die blokkade op te heffen. Ook bij een race tussen een update en een klik wordt nooit tijdens gameplay herladen: de controllerchange-handler controleert opnieuw de actuele speltoestand.
+De app controleert op een nieuwe worker bij starten, terugkeer naar de voorgrond, opnieuw online komen en iedere vijf minuten zolang de app zichtbaar is. Een nieuwe worker blijft wachten tijdens draaien, onthullen, beoordelen en het bekijken van de Top 20. Welkom en hoofdmenu zijn veilige momenten. Bij meerdere open vensters wordt activering uitgesteld; sluit andere Noobtips-tabbladen/vensters om die blokkade op te heffen. Ook bij een race tussen een update en een klik wordt nooit tijdens gameplay herladen: de controllerchange-handler controleert opnieuw de actuele speltoestand.
 
 Op een veilig moment wordt de nieuwe cache actief en worden oudere Noobtips-caches binnen dezelfde scope verwijderd. De app herlaadt stil. Een eenmalige sessionStorage-overdracht bewaart het hoofdmenu, het gekozen onderwerp en de mutevoorkeur; localStorage-ratings en tipgeschiedenis blijven onaangeroerd. Na zo'n documentreload kan audio opnieuw een gebruikershandeling vereisen: de volgende draai ontgrendelt audio als het niet gedempt was. De indicator blijft UIT tot Web Audio werkelijk draait. Bij geblokkeerde sessionStorage stelt de app een menu-reload uit tot een volgende appstart.
 

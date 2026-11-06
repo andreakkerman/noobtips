@@ -6,6 +6,7 @@ import { arcadeAudio } from './game/audio';
 import { Icon } from './components/Icon';
 import { Wheel } from './components/Wheel';
 import { TrashRating } from './components/TrashRating';
+import { Leaderboard } from './components/Leaderboard';
 import { setUpdateBoundary, updateSession } from './pwa';
 
 function useReducedMotion() {
@@ -32,6 +33,15 @@ export default function App() {
   const [game, setGame] = useState({ ...initialState, category: updateSession?.category ?? initialState.category });
   const gameRef = useRef(game);
   const [ratings, setRatings] = useState(loadRatings);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const leaderboardButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const sync = (event: StorageEvent) => {
+      if (event.key === RATINGS_KEY || event.key === null) setRatings(loadRatings());
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
   const [persisted, setPersisted] = useState(true);
   const history = useRef(loadHistory());
   const [sound, setSound] = useState(false);
@@ -73,8 +83,8 @@ export default function App() {
     gameRef.current = next; setGame(next);
   }, []);
   useEffect(() => {
-    setUpdateBoundary(!started || game.phase === 'ready', { started, category: game.category, sound: desiredSound.current });
-  }, [started, game.phase, game.category, sound]);
+    setUpdateBoundary(!started || (game.phase === 'ready' && !leaderboardOpen), { started, category: game.category, sound: desiredSound.current });
+  }, [started, game.phase, game.category, sound, leaderboardOpen]);
   const onLand = useCallback(() => {
     if (gameRef.current.phase !== 'spinning' || gameRef.current.landed) return;
     arcadeAudio.land(); send({ type: 'LAND' });
@@ -128,8 +138,17 @@ export default function App() {
   const busy = game.phase === 'spinning' || game.phase === 'revealing';
   const category = categories.find(c => c.id === game.category)!;
   const result = game.result;
+  const openLeaderboard = () => {
+    setUpdateBoundary(false, { started, category: game.category, sound: desiredSound.current });
+    setLeaderboardOpen(true); arcadeAudio.button();
+  };
+  const closeLeaderboard = () => {
+    setLeaderboardOpen(false); arcadeAudio.button();
+    requestAnimationFrame(() => leaderboardButton.current?.focus({ preventScroll: true }));
+  };
+  const visiblePhase = !started ? 'welcome' : leaderboardOpen ? 'leaderboard' : game.phase;
 
-  return <main className={`arcade phase-${started ? game.phase : 'welcome'} ${result ? `tier-${result.tier}` : ''} ${reduced ? 'reduced-motion' : ''}`} data-phase={started ? game.phase : 'welcome'} data-category={game.category} data-spin={game.spin} data-tier={result?.tier} data-tip-id={result?.tip.id}>
+  return <main className={`arcade phase-${visiblePhase} ${result ? `tier-${result.tier}` : ''} ${reduced ? 'reduced-motion' : ''}`} data-phase={visiblePhase} data-category={game.category} data-spin={game.spin} data-tier={result?.tier} data-tip-id={result?.tip.id}>
     <div ref={backdrop} className="scene-background" aria-hidden="true" /><div className="scene-vignette" aria-hidden="true" />
     <header className="topbar">
       <div className="brand" aria-label="Noobtips.nl"><div className="brand-mark" aria-hidden="true">N<Icon name="spark" /></div><div><div className="brand-word">noobtips<span>.nl</span></div></div></div>
@@ -140,7 +159,7 @@ export default function App() {
       <Slogan />
       <button type="button" className="primary-button play-button" onClick={start}><span>SPELEN!</span><Icon name="arrow" /></button>
     </section>}
-    {started && <section className="game-stage" aria-label="Het Noobrad">
+    {started && <section className="game-stage" aria-label="Het Noobrad" inert={leaderboardOpen} aria-hidden={leaderboardOpen}>
       <div className="ready-copy" aria-hidden={resultVisible} inert={resultVisible}>
         <Slogan />
         <div className="category-section">
@@ -149,6 +168,7 @@ export default function App() {
         </div>
         <div className="launch-section">
           <button type="button" ref={spinButton} className="primary-button spin-button" disabled={game.phase === 'spinning'} onClick={spin}><span>{game.phase === 'spinning' ? (game.landed ? 'DAAR KOMT IE…' : 'HET RAD DRAAIT…') : 'Geef me een Noobtip!'}</span><Icon name="arrow" /></button>
+          <button type="button" ref={leaderboardButton} className="leaderboard-button" disabled={game.phase !== 'ready'} onClick={openLeaderboard}><Icon name="trophy" /><span>TOP 20</span></button>
         </div>
       </div>
       <div ref={stage} className="machine-area"><Wheel game={game} reduced={reduced} onLand={onLand} /></div>
@@ -165,6 +185,7 @@ export default function App() {
         </div>
       </section>}
     </section>}
+    {started && leaderboardOpen && <Leaderboard ratings={ratings} onBack={closeLeaderboard} />}
     <div className="sr-only" role="status" aria-live="polite">{game.phase === 'spinning' ? 'Het Noobrad draait.' : game.phase === 'rating' && result ? `${segments[result.segment].label}. ${result.tip.text}` : ''}</div>
     {started && <footer className="footer" aria-hidden="true" />}
   </main>;

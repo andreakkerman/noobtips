@@ -13,6 +13,7 @@
     "test:smoke": "playwright test --config playwright.smoke.config.ts",
     "test:pwa:smoke": "node scripts/test-pwa.mjs --smoke",
     "review": "node scripts/capture-review.mjs",
+    "review:leaderboard": "node scripts/capture-leaderboard.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "test:pwa": "node scripts/test-pwa.mjs"
   },

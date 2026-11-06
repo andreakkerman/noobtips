@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 import { mkdir, writeFile, rename } from 'node:fs/promises';
 import path from 'node:path';
 
-const directory = path.resolve('docs/review/noobtips-v1.5');
+const directory = path.resolve('docs/review/noobtips-v1.6');
 await mkdir(directory, { recursive: true });
 const browser = await chromium.launch();
 const report = { capturedAt: new Date().toISOString(), browser: browser.version(), captures: [], errors: [], animation: {} };
