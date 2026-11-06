@@ -1,6 +1,29 @@
 # GitHub Pages publiceren en Noobtips op iPad installeren
 
-Er is niets gepusht en geen remote aangemaakt. Alles hieronder voer je pas uit wanneer je wilt publiceren. De site is volledig statisch; er is geen backend of externe runtime-API.
+De repository is gekoppeld aan `andreakkerman/noobtips`; pushes naar `main` publiceren via GitHub Actions. De site is volledig statisch; er is geen backend of externe runtime-API.
+
+## Snelle publicatie en volledige regressie
+
+De Pages-workflow draait unit-tests, bouwt `dist/` met het door Pages bepaalde basispad en test die productieversie met zes bestaande gameplay-scenario's in Chromium en WebKit (12 tests). Functionele checks gebruiken reduced motion; de echte animatie, exacte landing, reveal en bescherming tegen dubbele klikken blijven getest. De PWA-smoketest controleert offline spelen, manifest/assets/iconen, veilige updates, meerdere vensters, mislukte cache-installatie en ratingbehoud, zowel op een projectpad als op `/`. Alleen uitgebreide layout-screenshots en rotatie blijven buiten deze snelle selectie.
+
+Lokaal dezelfde selectie uitvoeren:
+
+```powershell
+pnpm test
+$env:PAGES_BASE_PATH='/'
+pnpm build
+pnpm test:smoke
+pnpm test:pwa:smoke
+Remove-Item Env:PAGES_BASE_PATH
+```
+
+Volledige regressie: **Actions → Full Noobtips regression → Run workflow**. Deze workflow publiceert niets en behoudt alle bestaande browser/viewporttests en volledige PWA-/layoutchecks. Lokaal: `pnpm test:e2e` en `pnpm test:pwa`.
+
+Beide workflows gebruiken `mcr.microsoft.com/playwright:v1.64.1-noble`, inclusief browsers en systeembibliotheken, zodat geen trage apt-installatie nodig is. Houd de containertag in beide workflows gelijk aan de exacte `@playwright/test`-versie in package.json en pnpm-lock.yaml. Zie de [officiële containerdocumentatie](https://playwright.dev/docs/docker).
+
+CI gebruikt twee workers zonder retries. Tests hebben 30 seconden (90 voor twee lange scenario's), acties 10 seconden, navigatie 15 seconden en browserstart 30 seconden. De globale smoke-limiet is 3 minuten, regressie 10 minuten; extra proceslimieten begrenzen ook vastgelopen teardown. PWA heeft een harde limiet van 3/5 minuten. Joblimieten: publicatievalidatie 10 minuten, deploy 3 minuten, volledige regressie 20 minuten. Normale publicatie mikt op 5–10 minuten inclusief setup en Pages; wachtrijen en infrastructuur kunnen afwijken.
+
+Rapporten, traces en screenshots bij fouten worden zeven dagen bewaard als workflow-artifacts. PWA-smoke schrijft naar `.runtime/pwa-smoke/`. Nieuwe pushes vervangen verouderde runs. Alleen geslaagde gates uploaden `dist/` via upload-pages-artifact en laten deploy-pages publiceren.
 
 ## 1. Lokaal controleren
 
@@ -19,7 +42,7 @@ pnpm build
 pnpm preview
 ```
 
-`pnpm dev` blijft de gewone ontwikkelomgeving. De service worker wordt alleen in productiebouw geregistreerd. `pnpm test:pwa` bouwt geïsoleerde versies onder `.runtime/`, start tijdelijk een lokale statische testserver op 4174 en sluit die na afloop. De test bewaart screenshots en rapport in `docs/review/noobtips-v1.3/`.
+`pnpm dev` blijft de gewone ontwikkelomgeving. De service worker wordt alleen in productiebouw geregistreerd. `pnpm test:pwa` bouwt geïsoleerde versies onder `.runtime/`, start tijdelijk een lokale statische testserver op 4174 en sluit die na afloop. De test bewaart screenshots en rapport in `docs/review/noobtips-v1.4/`.
 
 Een GitHub-projectpad lokaal controleren (hoofdletters moeten overeenkomen met de repositorynaam):
 
@@ -65,7 +88,7 @@ Vervang `OWNER` door je accountnaam. Als `origin` al bestaat, controleer eerst o
 
 1. Open repository **Settings → Pages → Build and deployment → Source → GitHub Actions**.
 2. Open **Actions → Validate and deploy Noobtips to Pages → Run workflow → main**. Dit kan nodig zijn wanneer de eerste push al plaatsvond voordat Pages werd aangezet.
-3. De workflow installeert pnpm en de vastgelegde dependencies, voert unit-, browser- en productie-PWA-tests uit, bouwt de site en uploadt uitsluitend `dist/` naar Pages.
+3. De workflow installeert pnpm en de vastgelegde dependencies, voert de hierboven beschreven publicatiechecks uit, bouwt de site en uploadt uitsluitend `dist/` naar Pages.
 4. Wacht tot de deployment in de omgeving `github-pages` groen is. Open de URL in die deployment, normaal `https://OWNER.github.io/Noobtips/`.
 5. Controleer in Settings → Pages dat HTTPS wordt afgedwongen.
 

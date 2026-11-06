@@ -7,13 +7,18 @@ permissions:
   contents: read
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   build:
+    timeout-minutes: 10
     permissions:
       contents: read
       pages: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container:
+      # Keep this version aligned with the exact @playwright/test dependency.
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,32 +27,44 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+        timeout-minutes: 2
       - run: pnpm test
-      - run: pnpm exec playwright install --with-deps chromium webkit
-      - run: pnpm test:e2e
-      - name: Upload Playwright failure diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-failures
-          path: test-results
-          if-no-files-found: ignore
-          retention-days: 7
-      - run: pnpm test:pwa
+        timeout-minutes: 1
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
       - name: Production build
         run: pnpm build
+        timeout-minutes: 1
         env:
-          # configure-pages accounts for project URLs and a configured custom domain.
           PAGES_BASE_PATH: ${{ vars.PAGES_BASE_PATH || format('{0}/', steps.pages.outputs.base_path) }}
+      - name: Chromium and WebKit production smoke tests
+        run: timeout --signal=TERM --kill-after=15s 210s pnpm test:smoke
+        timeout-minutes: 4
+        env:
+          PAGES_BASE_PATH: ${{ vars.PAGES_BASE_PATH || format('{0}/', steps.pages.outputs.base_path) }}
+      - name: Essential PWA validation
+        run: timeout --signal=TERM --kill-after=15s 210s pnpm test:pwa:smoke
+        timeout-minutes: 4
+      - name: Upload test diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-test-results
+          path: |
+            test-results
+            playwright-report
+            .runtime/pwa-smoke
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    runs-on: ubuntu-24.04
     permissions:
       pages: write
       id-token: write

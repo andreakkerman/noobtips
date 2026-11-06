@@ -1,0 +1,47 @@
+name: Full Noobtips regression
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: regression-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  regression:
+    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        timeout-minutes: 2
+      - run: pnpm test
+        timeout-minutes: 1
+      - run: pnpm build
+        timeout-minutes: 1
+        env:
+          PAGES_BASE_PATH: /
+      - name: All browser and viewport scenarios
+        run: timeout --signal=TERM --kill-after=15s 630s pnpm test:e2e
+        timeout-minutes: 11
+      - name: Full PWA and layout regression
+        run: timeout --signal=TERM --kill-after=15s 330s pnpm test:pwa
+        timeout-minutes: 6
+      - name: Upload regression diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-regression-results
+          path: |
+            test-results
+            playwright-report
+            docs/review/noobtips-v1.4
+          if-no-files-found: ignore
+          retention-days: 7

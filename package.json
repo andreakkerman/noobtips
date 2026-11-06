@@ -10,6 +10,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:smoke": "playwright test --config playwright.smoke.config.ts",
+    "test:pwa:smoke": "node scripts/test-pwa.mjs --smoke",
     "review": "node scripts/capture-review.mjs",
     "icons": "node scripts/generate-icons.mjs",
     "test:pwa": "node scripts/test-pwa.mjs"
@@ -21,7 +23,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.0",
+    "@playwright/test": "1.64.1",
     "@types/node": "^24.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",

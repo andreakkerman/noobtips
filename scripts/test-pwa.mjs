@@ -6,14 +6,17 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 
-const output = path.resolve('docs/review/noobtips-v1.4');
+const smoke = process.argv.includes('--smoke');
+const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.4');
+// Last-resort bound also covers browser protocol calls and teardown.
+const deadline = setTimeout(() => { console.error('PWA suite exceeded its hard deadline'); process.exit(1); }, smoke ? 180_000 : 300_000);
 await mkdir(output, { recursive: true });
 const report = { checks: [], screenshots: [], errors: [] };
 const check = text => { report.checks.push(text); console.log(text); };
 const build = (name, base) => {
   const dir = path.resolve('.runtime', `pwa-${name}`);
   execFileSync(process.execPath, ['node_modules/vite/bin/vite.js','build','--outDir',dir], {
-    env: { ...process.env, PAGES_BASE_PATH: base, PWA_BUILD_ID: name }, stdio: 'pipe',
+    env: { ...process.env, PAGES_BASE_PATH: base, PWA_BUILD_ID: name }, stdio: 'pipe', timeout: 60_000,
   });
   return dir;
 };
@@ -38,6 +41,13 @@ await new Promise(resolve => server.listen(4174,'127.0.0.1',resolve));
 const origin='http://127.0.0.1:4174';
 const url=origin+'/Noobtips/';
 const browser=await chromium.launch();
+const contexts=[];
+const newContext=async options=>{
+  const context=await browser.newContext(options);
+  context.setDefaultTimeout(10_000);context.setDefaultNavigationTimeout(15_000);
+  await context.tracing.start({screenshots:true,snapshots:true,sources:true});
+  contexts.push(context);return context;
+};
 const until=async (fn, label, timeout=15000) => {
   const start=Date.now(); while(Date.now()-start<timeout) { if(await fn()) return; await new Promise(r=>setTimeout(r,100)); }
   throw Error('Timed out: '+label);
@@ -58,7 +68,7 @@ try {
   const cssName=assets.find(a=>a.endsWith('.css'));const css=await(await fetch(origin+cssName)).text();
   assert(css.includes('/Noobtips/art/observatory.webp'));assert(!css.includes('url(/art/'));
   check('Project base: manifest, all precache assets, artwork/font URLs and icon sizes valid.');
-  const context=await browser.newContext({viewport:{width:1024,height:768}});
+  const context=await newContext({viewport:{width:1024,height:768}});
   const page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));
   await page.goto(url);await workerReady(page);
   assert.equal((await cacheNames(page)).length,1);
@@ -131,11 +141,12 @@ try {
   check('Relaunch picks up a complete newer version at welcome without losing saved ratings.');
   await context.close();
   // Portrait / rotation is usable without orientation locking; target landscape screenshots.
+  if (!smoke) {
   const source=await readFile('src/data/tips.ts','utf8');
   const tips=[...source.matchAll(/\['((arc|general)-\d+)', '(.+)'\]/g)].map(m=>({id:m[1],category:m[2],text:m[3]}));
   tips.sort((a,b)=>a.text.length-b.text.length);
   for(const [width,height] of [[1024,768],[1280,800],[1366,768]]) {
-    const c=await browser.newContext({viewport:{width,height}});const p=await c.newPage();
+    const c=await newContext({viewport:{width,height}});const p=await c.newPage();
     await p.goto(url);await workerReady(p);
     for(const [label,tip] of [['short',tips[0]],['long',tips.at(-1)]]) {
       await p.evaluate(({tip,ids})=>{localStorage.setItem('noobtips.history.v1',JSON.stringify({[tip.category]:ids.filter(id=>id!==tip.id)}));}, {tip,ids:tips.filter(t=>t.category===tip.category).map(t=>t.id)});
@@ -152,7 +163,7 @@ try {
     }
     await c.close();
   }
-  const portraitContext=await browser.newContext({viewport:{width:768,height:1024},hasTouch:true});
+  const portraitContext=await newContext({viewport:{width:768,height:1024},hasTouch:true});
   const portrait=await portraitContext.newPage();await portrait.goto(url);
   await portrait.getByRole('button',{name:'SPELEN!',exact:true}).click();
   await portrait.getByRole('button',{name:'DRAAI HET NOOBRAD!',exact:true}).click();await phase(portrait,'rating');
@@ -162,13 +173,22 @@ try {
   assert(await portrait.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await portraitContext.close();check('Portrait play and rotation back to landscape work without an orientation lock.');
   check('Short/long retained tips captured at all three resolutions; dominant typography, KANSLOOS consistency, controls and no overflow verified.');
+  }
   serving=builds.root;
-  const rootContext=await browser.newContext();const rootPage=await rootContext.newPage();
+  const rootContext=await newContext();const rootPage=await rootContext.newPage();
   await rootPage.goto(origin+'/');await workerReady(rootPage);const rootManifest=await(await fetch(origin+'/manifest.webmanifest')).json();assert.equal(rootManifest.start_url,'/');
   await rootContext.setOffline(true);await rootPage.reload();await phase(rootPage,'welcome');await rootContext.close();
   check('Custom-domain root build installs and cold-reloads offline.');
   assert.deepEqual(report.errors,[]);
+} catch(error) {
+  report.errors.push(String(error));
+  for(const [i,context] of contexts.entries()) {
+    for(const [j,page] of context.pages().entries()) await page.screenshot({path:path.join(output,`failure-${i}-${j}.png`),timeout:3000}).catch(()=>{});
+    await context.tracing.stop({path:path.join(output,`trace-${i}.zip`)}).catch(()=>{});
+  }
+  throw error;
 } finally {
   await writeFile(path.join(output,'pwa-report.json'),JSON.stringify(report,null,2));
   await browser.close();await new Promise(resolve=>server.close(resolve));
+  clearTimeout(deadline);
 }

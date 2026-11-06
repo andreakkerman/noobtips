@@ -3,12 +3,14 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  // WebKit competes heavily for CPU with concurrent browsers on hosted runners.
-  workers: process.env.CI ? 1 : 3,
+  workers: process.env.CI ? 2 : 3,
+  globalTimeout: 10 * 60_000,
+  retries: 0,
+  forbidOnly: !!process.env.CI,
   timeout: 30_000,
   expect: { timeout: 7_000 },
-  reporter: [['list']],
-  use: { baseURL: 'http://127.0.0.1:5173', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+  reporter: [['list'], ['html', { open: 'never' }]],
+  use: { baseURL: 'http://127.0.0.1:5173', actionTimeout: 10_000, navigationTimeout: 15_000, launchOptions: { timeout: 30_000 }, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   projects: [
     { name: 'desktop-1366', use: { browserName: 'chromium', viewport: { width: 1366, height: 768 } } },
     { name: 'chromebook-1280', use: { browserName: 'chromium', viewport: { width: 1280, height: 800 } } },
