@@ -11,9 +11,10 @@ test('final ratings produce one milestone, category changes preserve streak and 
  }
  await expect(page.locator('.streak-celebration')).toHaveAttribute('data-streak','5');
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('noobtips.ratings.v2')!).length)).toBe(5);
+ await page.getByRole('button',{name:'YAY!',exact:true}).click();
  await page.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await expect(page.locator('main')).toHaveAttribute('data-phase','rating');
  await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
- await expect(page.locator('.streak-celebration')).toHaveCount(0,{timeout:4000});
+ await expect(page.locator('.streak-celebration')).toHaveCount(0);
  await page.getByRole('button',{name:'TOP 20',exact:true}).click();await expect(page.getByText('5 volledig afgekeurd',{exact:true})).toBeVisible();
 });
 test('mountain renders deterministic pixels within a bounded frame budget',async({page})=>{

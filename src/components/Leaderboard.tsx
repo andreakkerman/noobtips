@@ -7,7 +7,7 @@ import type { Ratings } from '../game/storage';
 import { Bin } from './TrashRating';
 import { Icon } from './Icon';
 
-export function Leaderboard({ ratings, onBack, previousCount }: { ratings: Ratings; previousCount: number; onBack(): void }) {
+export function Leaderboard({ ratings, onBack }: { ratings: Ratings; onBack(): void }) {
   const ranked = rankTips(ratings);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
@@ -20,7 +20,7 @@ export function Leaderboard({ ratings, onBack, previousCount }: { ratings: Ratin
         <p className="leaderboard-intro">Het slechtste advies verdient een ereplaats.</p>
       </div>
     </header>
-    <div className="leaderboard-world"><Mountain count={fiveCount(ratings)} previousCount={previousCount} /><div className="ranking-panel">
+    <div className="leaderboard-world"><Mountain count={fiveCount(ratings)} /><div className="ranking-panel">
     {ranked.length ? <div className="leaderboard-scroll" role="region" aria-label="Gerangschikte noobtips" tabIndex={0}>
       <ol className="leaderboard-list">
         {ranked.map((tip, index) => <li key={tip.id} className={`leaderboard-row place-${index + 1}`} data-tip-id={tip.id} data-rating={tip.rating}>

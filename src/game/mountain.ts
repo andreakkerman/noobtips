@@ -109,5 +109,9 @@ export function drawArrival(c:CanvasRenderingContext2D,object:Junk,art:MountainA
   if(time>.66){const age=(time-.66)/.34;c.save();c.globalAlpha=(1-age)*.45;
     for(let i=0;i<32;i++){const x=object.x+(noise(i+object.id)-.5)*object.size*2*age,y=object.y-4-Math.sin(age*Math.PI)*noise(i+3)*35;
       c.fillStyle=i%4?'#d2bb86':'#93b7ac';c.beginPath();c.ellipse(x,y,2+age*noise(i+8)*10,1+age*noise(i+5)*4,0,0,Math.PI*2);c.fill();}
+    for(let i=0;i<10;i++){
+      c.save();c.globalAlpha=(1-age)*.8;c.translate(object.x+(noise(i+31)-.5)*object.size*age*1.7,object.y-4-70*age+85*age*age);
+      c.rotate(age*(i-5));c.fillStyle=i%2?'#e8bd79':'#719a96';c.fillRect(-2,-1,4+noise(i)*4,3);c.restore();
+    }
     c.restore();}
 }

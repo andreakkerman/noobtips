@@ -7,7 +7,7 @@ import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 
 const smoke = process.argv.includes('--smoke');
-const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.8.1');
+const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.8.2');
 // Last-resort bound also covers browser protocol calls and teardown.
 const deadline = setTimeout(() => { console.error('PWA suite exceeded its hard deadline'); process.exit(1); }, smoke ? 180_000 : 300_000);
 await mkdir(output, { recursive: true });
@@ -167,6 +167,27 @@ try {
   assert.equal(await relaunched.evaluate(()=>localStorage.getItem('noobtips.ratings.v2')),rated);
   check('Relaunch picks up a complete newer version at welcome without losing saved ratings.');
   await context.close();
+  // A persistent celebration is an interaction boundary even after its particles stop.
+  serving=builds.a;
+  const celebrationContext=await newContext({reducedMotion:'reduce'});
+  const celebrationPage=await celebrationContext.newPage();await celebrationPage.goto(url);await workerReady(celebrationPage);
+  await celebrationPage.getByRole('button',{name:'SPELEN!',exact:true}).click();
+  for(let i=0;i<5;i++){
+    await celebrationPage.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await phase(celebrationPage,'rating');
+    await celebrationPage.getByRole('radio',{name:/^5 van 5/}).click();
+    await celebrationPage.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
+  }
+  await celebrationPage.getByRole('button',{name:'YAY!',exact:true}).waitFor();
+  const celebrationRatings=await celebrationPage.evaluate(()=>localStorage.getItem('noobtips.ratings.v2'));
+  serving=builds.b;await checkUpdate(celebrationPage);await waitUpdate(celebrationPage);
+  await celebrationPage.waitForTimeout(3500);
+  assert.equal(await celebrationPage.getByRole('dialog').count(),1);
+  assert(await celebrationPage.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting)));
+  await celebrationPage.getByRole('button',{name:'YAY!',exact:true}).click();
+  await until(()=>celebrationPage.evaluate(async()=>!(await navigator.serviceWorker.getRegistration()).waiting).catch(()=>false),'update after YAY');
+  await phase(celebrationPage,'ready');assert.equal(await celebrationPage.evaluate(()=>localStorage.getItem('noobtips.ratings.v2')),celebrationRatings);
+  await celebrationContext.close();
+  check('A settled interactive streak defers PWA activation until YAY, then resumes the menu without losing ratings.');
   // Portrait / rotation is usable without orientation locking; target landscape screenshots.
   if (!smoke) {
   const source=await readFile('src/data/tips.ts','utf8');

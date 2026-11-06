@@ -1,0 +1,21 @@
+{
+  "cpuThrottle": 4,
+  "viewport": "1024x768",
+  "count": 150,
+  "phases": [
+    {
+      "phase": "establishing",
+      "time": 2310.7000000476837
+    },
+    {
+      "phase": "arriving",
+      "time": 3338.899999976158
+    },
+    {
+      "phase": "settled",
+      "time": 5061.100000023842
+    }
+  ],
+  "p95": 16.80000000000001,
+  "frames": 147
+}

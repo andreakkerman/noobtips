@@ -24,6 +24,7 @@ class ArcadeAudio {
     gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(level, start + 0.008); gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
     oscillator.connect(gain); gain.connect(this.master); oscillator.start(start); oscillator.stop(start + duration + 0.02);
     oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+    return () => { gain.gain.cancelScheduledValues(this.context!.currentTime); gain.gain.setValueAtTime(0,this.context!.currentTime); oscillator.stop(); };
   }
   button() { this.tone(180, 0.12, 0, 'triangle', 0.7, 80); this.tone(640, 0.08, 0.025, 'sine', 0.2); }
   spin() { this.button(); this.tone(65, 0.65, 0, 'triangle', 0.17, 200); }
@@ -36,6 +37,11 @@ class ArcadeAudio {
   milestone() {
     this.tone(55, 1.8, 0, 'sine', .8, 36);
     [220,330,440,554.37,659.25,880].forEach((note,i) => this.tone(note, 1.7, .08+i*.065, 'triangle', .16));
+  }
+  junkImpact() {
+    // Original short resonant metal thud, with a descending chassis vibration.
+    const stops=[this.tone(95,.32,0,'sine',.85,38),this.tone(347,.22,.01,'triangle',.25,131),this.tone(911,.12,.045,'sine',.12,510)];
+    return () => stops.forEach(stop=>stop?.());
   }
   rate(value: number) { this.tone(220 + value * 70, 0.12, 0, 'triangle', 0.35); this.tone(440 + value * 80, 0.22, 0.06, 'sine', 0.22); }
 }

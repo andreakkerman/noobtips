@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { drawMountain, drawArrival, loadMountainArt, mountainObjects, WORLD_HEIGHT, WORLD_WIDTH } from '../game/mountain';
+import { arcadeAudio } from '../game/audio';
 
-export function Mountain({ count, previousCount }: { count: number; previousCount: number }) {
+export function Mountain({ count }: { count: number }) {
   const canvas=useRef<HTMLCanvasElement>(null);
   const [failed,setFailed]=useState(false);
   useEffect(()=>{
-    let cancelled=false,frame=0;
+    let cancelled=false,frame=0,timer=0,stopImpact:(()=>void)|undefined;
     const media=matchMedia('(prefers-reduced-motion: reduce)');
     const render=async()=>{
       try {
@@ -13,28 +14,43 @@ export function Mountain({ count, previousCount }: { count: number; previousCoun
         const el=canvas.current!,c=el.getContext('2d')!;
         const ratio=Math.min(window.devicePixelRatio||1,1.5);
         el.width=WORLD_WIDTH*ratio;el.height=WORLD_HEIGHT*ratio;c.scale(ratio,ratio);
-        const last=mountainObjects(count).at(-1);
-        const animate=!media.matches && count>previousCount && last;
-        // Cache everything except the arriving deposit. Animation frames composite
-        // one bitmap and the moving object, not hundreds of static sprites.
-        const cache=document.createElement('canvas');cache.width=el.width;cache.height=el.height;
-        const cached=cache.getContext('2d')!;cached.scale(ratio,ratio);
-        drawMountain(cached,count,art,animate?last.id:undefined,animate?'behind':'all');
-        const front=document.createElement('canvas');front.width=el.width;front.height=el.height;
-        if(animate){const foreground=front.getContext('2d')!;foreground.scale(ratio,ratio);drawMountain(foreground,count,art,last.id,'front');}
-        const start=performance.now();
-        const draw=(now:number)=>{
+        const layer=()=>{const el=document.createElement('canvas');el.width=WORLD_WIDTH*ratio;el.height=WORLD_HEIGHT*ratio;const ctx=el.getContext('2d')!;ctx.scale(ratio,ratio);return {el,ctx};};
+        const complete=layer();drawMountain(complete.ctx,count,art);
+        const showComplete=()=>{c.clearRect(0,0,WORLD_WIDTH,WORLD_HEIGHT);c.drawImage(complete.el,0,0,WORLD_WIDTH,WORLD_HEIGHT);};
+        showComplete();setFailed(false);
+        const recent=mountainObjects(count).slice(count>=75?-2:-1);
+        if(!recent.length||media.matches){el.dataset.entrance='settled';return;}
+        el.dataset.entrance='establishing';
+        // Wait for the fully rendered scene to paint before starting the hold.
+        frame=requestAnimationFrame(()=>{frame=requestAnimationFrame(()=>{
           if(cancelled)return;
-          const t=animate&&!media.matches?Math.min(1,(now-start)/1100):1;
-          c.clearRect(0,0,WORLD_WIDTH,WORLD_HEIGHT);c.drawImage(cache,0,0,WORLD_WIDTH,WORLD_HEIGHT);
-          if(animate&&last){drawArrival(c,last,art,t);c.drawImage(front,0,0,WORLD_WIDTH,WORLD_HEIGHT);}
-          if(t<1)frame=requestAnimationFrame(draw);
-        };
-        draw(start);setFailed(false);
+          timer=window.setTimeout(()=>{
+            let index=0;
+            const drop=()=>{
+              if(cancelled)return;
+              if(media.matches||index>=recent.length){showComplete();el.dataset.entrance='settled';return;}
+              const object=recent[index],behind=layer(),front=layer();
+              drawMountain(behind.ctx,count,art,object.id,'behind');drawMountain(front.ctx,count,art,object.id,'front');
+              const start=performance.now(),duration=recent.length>1?850:1250;let impacted=false;
+              el.dataset.entrance='arriving';
+              const draw=(now:number)=>{
+                if(cancelled)return;
+                const t=media.matches?1:Math.min(1,(now-start)/duration);
+                c.clearRect(0,0,WORLD_WIDTH,WORLD_HEIGHT);c.drawImage(behind.el,0,0,WORLD_WIDTH,WORLD_HEIGHT);
+                drawArrival(c,object,art,t);c.drawImage(front.el,0,0,WORLD_WIDTH,WORLD_HEIGHT);
+                if(t>=.66&&!impacted&&!media.matches){impacted=true;stopImpact?.();stopImpact=arcadeAudio.junkImpact();}
+                if(t<1)frame=requestAnimationFrame(draw);
+                else {index++;drop();}
+              };
+              frame=requestAnimationFrame(draw);
+            };
+            drop();
+          },1000);
+        });});
       } catch {if(!cancelled)setFailed(true);}
     };
     void render();
-    return()=>{cancelled=true;cancelAnimationFrame(frame);};
-  },[count,previousCount]);
+    return()=>{cancelled=true;clearTimeout(timer);cancelAnimationFrame(frame);stopImpact?.();};
+  },[count]);
   return <div className="mountain-scene"><canvas ref={canvas} aria-label={`De Afvalberg: ${count} volledig afgekeurd`} role="img" />{failed&&<p className="mountain-error">De berg kon niet laden. Open de Top 20 opnieuw.</p>}<div className="mountain-caption"><h2>De Afvalberg</h2><span>{count} volledig afgekeurd</span></div></div>;
 }
