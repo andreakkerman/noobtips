@@ -53,7 +53,12 @@ const until=async (fn, label, timeout=15000) => {
   throw Error('Timed out: '+label);
 };
 const phase=(page,value)=>until(()=>page.locator('main').getAttribute('data-phase').then(v=>v===value),'phase '+value);
-const workerReady=page=>page.evaluate(async()=>{await navigator.serviceWorker.ready; if(!navigator.serviceWorker.controller) await new Promise(r=>navigator.serviceWorker.addEventListener('controllerchange',r,{once:true}));});
+// An update at welcome may reload the page while control is being acquired.
+// Poll across that expected navigation rather than holding a promise in the old page.
+const workerReady=page=>until(()=>page.evaluate(()=>Boolean(navigator.serviceWorker.controller)).catch(error=>{
+  if (/Execution context was destroyed|Cannot find context/.test(error.message)) return false;
+  throw error;
+}), 'service worker controller');
 const cacheNames=page=>page.evaluate(()=>caches.keys());
 const checkUpdate=page=>page.evaluate(async()=>{ const r=await navigator.serviceWorker.getRegistration(); await r.update(); });
 const waitUpdate=page=>until(()=>page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration())?.waiting)),'waiting update');
