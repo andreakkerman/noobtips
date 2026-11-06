@@ -1,0 +1,123 @@
+{
+  "captures": [
+    "1024-mountain-0.png",
+    "1024-mountain-1.png",
+    "1024-mountain-5.png",
+    "1024-mountain-10.png",
+    "1024-mountain-17.png",
+    "1024-mountain-24.png",
+    "1024-mountain-25.png",
+    "1024-mountain-38.png",
+    "1024-mountain-49.png",
+    "1024-mountain-50.png",
+    "1024-mountain-63.png",
+    "1024-mountain-74.png",
+    "1024-mountain-75.png",
+    "1024-mountain-99.png",
+    "1024-mountain-100.png",
+    "1024-mountain-125.png",
+    "1280-mountain-0.png",
+    "1280-mountain-1.png",
+    "1280-mountain-5.png",
+    "1280-mountain-10.png",
+    "1280-mountain-17.png",
+    "1280-mountain-24.png",
+    "1280-mountain-25.png",
+    "1280-mountain-38.png",
+    "1280-mountain-49.png",
+    "1280-mountain-50.png",
+    "1280-mountain-63.png",
+    "1280-mountain-74.png",
+    "1280-mountain-75.png",
+    "1280-mountain-99.png",
+    "1280-mountain-100.png",
+    "1280-mountain-125.png",
+    "1366-mountain-0.png",
+    "1366-mountain-1.png",
+    "1366-mountain-5.png",
+    "1366-mountain-10.png",
+    "1366-mountain-17.png",
+    "1366-mountain-24.png",
+    "1366-mountain-25.png",
+    "1366-mountain-38.png",
+    "1366-mountain-49.png",
+    "1366-mountain-50.png",
+    "1366-mountain-63.png",
+    "1366-mountain-74.png",
+    "1366-mountain-75.png",
+    "1366-mountain-99.png",
+    "1366-mountain-100.png",
+    "1366-mountain-125.png"
+  ],
+  "errors": [],
+  "animations": [
+    {
+      "width": 1024,
+      "count": 25,
+      "frames": 85,
+      "p95": 16.700000000000045
+    },
+    {
+      "width": 1024,
+      "count": 50,
+      "frames": 82,
+      "p95": 16.799999999999955
+    },
+    {
+      "width": 1024,
+      "count": 100,
+      "frames": 76,
+      "p95": 16.700000000000045
+    },
+    {
+      "width": 1280,
+      "count": 25,
+      "frames": 84,
+      "p95": 16.700000000000045
+    },
+    {
+      "width": 1280,
+      "count": 50,
+      "frames": 81,
+      "p95": 16.700000000000045
+    },
+    {
+      "width": 1280,
+      "count": 100,
+      "frames": 78,
+      "p95": 16.799999999999955
+    },
+    {
+      "width": 1366,
+      "count": 25,
+      "frames": 84,
+      "p95": 16.800000000000068
+    },
+    {
+      "width": 1366,
+      "count": 50,
+      "frames": 81,
+      "p95": 16.799999999999955
+    },
+    {
+      "width": 1366,
+      "count": 100,
+      "frames": 80,
+      "p95": 16.799999999999955
+    }
+  ],
+  "renderMs": [
+    {
+      "width": 1024,
+      "average": 1.094999998807907
+    },
+    {
+      "width": 1280,
+      "average": 0.8899999976158142
+    },
+    {
+      "width": 1366,
+      "average": 1.4449999988079072
+    }
+  ]
+}

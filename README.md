@@ -1,8 +1,8 @@
-# Noobtips.nl 1.4
+# Noobtips.nl 1.8
 
-Een volledig lokale mini-arcade: een groots mechanisch rad, veertig actieve Nederlandse tips in Algemeen en Arc Raiders en vijf prullenbakken om ze te beoordelen. Gebouwd met React, TypeScript en Vite; zonder backend, accounts of externe runtime-API's.
+Een volledig lokale mini-arcade: een groots mechanisch rad, 200 actieve Nederlandse tips in Algemeen en Arc Raiders en vijf prullenbakken om ze te beoordelen. Gebouwd met React, TypeScript en Vite; zonder backend, accounts of externe runtime-API's.
 
-Algemeen is standaard geselecteerd. De twintig School-tips blijven ongewijzigd opgeslagen voor later, maar zijn niet speelbaar. Bestaande School-beoordelingen en geschiedenis blijven bewaard.
+Algemeen is standaard geselecteerd. De twintig School-tips blijven ongewijzigd opgeslagen voor later, maar zijn niet speelbaar. School blijft inactief; selectiegeschiedenis blijft gescheiden van beoordelingen.
 
 ## Starten op Windows
 
@@ -23,7 +23,7 @@ pnpm build
 pnpm preview
 ```
 
-De statische uitvoer staat in `dist/`. Er is geen hosting of Git-remote ingesteld.
+De statische uitvoer staat in `dist/`. Publicatie verloopt via de bestaande GitHub Pages-workflow naar https://noobtips.nl.
 
 ## Testen
 
@@ -52,10 +52,10 @@ Vitest controleert inhoud, categoriegeschiedenis, opslag, de speltoestanden en d
 
 Per browser en origine worden deze localStorage-sleutels gebruikt:
 
-- `noobtips.ratings.v1`: object met tip-ID → beoordeling 1–5.
-- `noobtips.history.v1`: per categorie de al getoonde IDs, zodat er geen herhaling is voordat de verzameling op is. Ook de eerste tip van een nieuwe ronde verschilt van de vorige.
+- `noobtips.ratings.v2`: gebeurtenissen met uniek draai-ID, tip-ID en beoordeling 1–5. Oude v1-beoordelingen worden genegeerd.
+- `noobtips.history.v2`: per categorie de gebruikte IDs, resterende geschudde bag, laatste acht IDs en cyclusnummer. V1-geschiedenis wordt veilig overgenomen. Nieuwe tips worden in de resterende bag ingevoegd; verwijderde IDs worden weggefilterd.
 
-Je kunt beoordelingen veranderen door een andere prullenbak te kiezen. Verwijder de sleutels via browserontwikkeltools om helemaal opnieuw te beginnen. Gegevens worden nergens verzonden. Bij geblokkeerde opslag blijft de huidige speelsessie werken; de interface meldt dan dat de beoordeling alleen voor die sessie bewaard is. Een andere poort of hostname geldt voor de browser als een andere opslaglocatie.
+Iedere draai begint zonder geselecteerde beoordeling. Aanpassen bewerkt dezelfde gebeurtenis; dezelfde tip in een latere draai krijgt een nieuwe gebeurtenis. Een onbewerkte draai schrijft niets weg. De definitieve beoordeling telt voor de sessiestreak bij opnieuw draaien of teruggaan naar het menu. Verwijder de sleutels via browserontwikkeltools om helemaal opnieuw te beginnen. Gegevens worden nergens verzonden. Bij geblokkeerde opslag blijft de huidige speelsessie werken; de interface meldt dan dat de beoordeling alleen voor die sessie bewaard is. Een andere poort of hostname geldt voor de browser als een andere opslaglocatie.
 
 ## Validatie en grenzen
 
@@ -67,4 +67,16 @@ Als Corepack pnpm offline niet kan starten, gebruik de reeds geïnstalleerde too
 
 ## GitHub Pages en iPad
 
-Zie [publiceren en installeren](docs/PUBLISHING.md) voor exacte commando’s, Pages/custom-domain-configuratie, offline caching, veilige updates en de resterende iPad-controles. Er is niets gepusht en geen remote toegevoegd. `pnpm test:pwa` valideert echte productiebouws op project- en rootpaden. `pnpm icons` regenereert de originele iconen uit de vectorbron.
+Zie [publiceren en installeren](docs/PUBLISHING.md) voor exacte commando’s, Pages/custom-domain-configuratie, offline caching, veilige updates en de resterende iPad-controles. De bestaande remote en domeinconfiguratie blijven behouden. `pnpm test:pwa` valideert echte productiebouws op project- en rootpaden. `pnpm icons` regenereert de originele iconen uit de vectorbron.
+
+## Afvalberg en streaks (1.7)
+
+De Top 20 aggregeert historische beoordelingen: gemiddelde, aantal vijven, totaal aantal en stabiel tip-ID bepalen de volgorde. De procedurele Canvas-berg voegt vaste objecten toe per 5/5-gebeurtenis. De vaste camera toont sterke verticale groei; na 320 kernobjecten volgen maximaal 80 zichtbare schouderbijdragen. Beoordelingen en teller blijven volledig bewaard. Originele lokale omgevingskunst en een transparante atlas met zestien objecten worden procedureel samengesteld. Voor- en achtergrondlagen worden tijdens het vallen gecachet.
+
+Streaks tellen uitsluitend afgeronde draaien. Bewerken en opnieuw klikken telt nooit dubbel; overslaan of lager dan vijf verbreekt de reeks. De tien primaire mijlpalen tonen een 2,8 seconden durend, niet-blokkerend Canvas/CSS-effect met originele geluidssynthese. Reduced motion toont een stilstaande variant.
+
+`pnpm review:mountain` legt zestien bergstadia en echte toevoegingen bij 25/50/100 vast op alle drie landschapformaten, inclusief WebM-opnamen. Zie `docs/review/noobtips-v1.8/REVIEW.md`. `pnpm test:smoke` blijft de korte publicatiecontrole; de afzonderlijke volledige regressieworkflow blijft behouden.
+
+## Tipvariatie (1.8)
+
+Fisher–Yates bags worden per categorie bewaard. De laatste acht tips worden bij een nieuwe cyclus ontzien wanneer er alternatieven zijn. Een expliciete lokale woordenlijst in `src/game/topics.ts` herkent onderwerpen en enkele zinsopeningen. Onder de nog ongebruikte kandidaten krijgen minder recent gebruikte onderwerpen voorrang; gelijke scores volgen de willekeurig geschudde bag. Een kleine pool mag de voorkeuren loslaten om altijd door te kunnen spelen. De selectie gebruikt browser-crypto en accepteert een geïnjecteerde randombron voor tests. Radkansen en timing zijn onafhankelijk gebleven.

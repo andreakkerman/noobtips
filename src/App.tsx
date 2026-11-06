@@ -7,6 +7,8 @@ import { Icon } from './components/Icon';
 import { Wheel } from './components/Wheel';
 import { TrashRating } from './components/TrashRating';
 import { Leaderboard } from './components/Leaderboard';
+import { recordRating, Streak, fiveCount } from './game/ratings';
+import { StreakCelebration } from './components/StreakCelebration';
 import { setUpdateBoundary, updateSession } from './pwa';
 
 function useReducedMotion() {
@@ -33,7 +35,18 @@ export default function App() {
   const [game, setGame] = useState({ ...initialState, category: updateSession?.category ?? initialState.category });
   const gameRef = useRef(game);
   const [ratings, setRatings] = useState(loadRatings);
+  const activeSpin = useRef<{ id: string; value: number } | null>(null);
+  const [currentRating, setCurrentRating] = useState(0);
+  const streak = useRef(new Streak());
+  const [celebration, setCelebration] = useState<{ count: number; title: string } | null>(null);
+  const finalize = () => {
+    if (!activeSpin.current) return;
+    const milestone = streak.current.finalize(activeSpin.current.id, activeSpin.current.value);
+    activeSpin.current = null;
+    if (milestone) { setCelebration(milestone); arcadeAudio.milestone(); }
+  };
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const mountainSeen = useRef(fiveCount(ratings));
   const leaderboardButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const sync = (event: StorageEvent) => {
@@ -106,6 +119,9 @@ export default function App() {
   const spin = () => {
     const state = gameRef.current;
     if (state.phase !== 'ready' && state.phase !== 'rating') return;
+    finalize();
+    activeSpin.current = { id: crypto.randomUUID(), value: 0 };
+    setCurrentRating(0); setPersisted(true);
     // A quiet update may have reloaded the menu. Unlock audio on the next gesture.
     if (desiredSound.current && !arcadeAudio.enabled) void toggleSound();
     const selected = selectTip(state.category, history.current);
@@ -115,10 +131,14 @@ export default function App() {
     if (window.matchMedia('(max-width: 800px)').matches) window.scrollTo({ top: 0, behavior: reduced ? 'instant' : 'smooth' });
     requestAnimationFrame(() => spinButton.current?.focus({ preventScroll: true }));
   };
-  const changeCategory = (category: CategoryId) => { send({ type: 'CATEGORY', category }); arcadeAudio.button(); };
+  const changeCategory = (category: CategoryId) => { finalize(); send({ type: 'CATEGORY', category }); arcadeAudio.button(); };
   const rate = (value: number) => {
     if (game.phase !== 'rating' || !game.result) return;
-    const next = { ...ratings, [game.result.tip.id]: value }; setRatings(next); setPersisted(save(RATINGS_KEY, next)); arcadeAudio.rate(value);
+    if (!activeSpin.current) return;
+    activeSpin.current.value = value; setCurrentRating(value);
+    const saved = loadRatings();
+    const next = recordRating(saved.concat(ratings.filter(e => !saved.some(item => item.id === e.id))), activeSpin.current.id, game.result.tip.id, value);
+    setRatings(next); setPersisted(save(RATINGS_KEY, next)); arcadeAudio.rate(value);
   };
   const toggleSound = async () => {
     if (audioBusy.current) return; audioBusy.current = true;
@@ -143,6 +163,7 @@ export default function App() {
     setLeaderboardOpen(true); arcadeAudio.button();
   };
   const closeLeaderboard = () => {
+    mountainSeen.current = fiveCount(ratings);
     setLeaderboardOpen(false); arcadeAudio.button();
     requestAnimationFrame(() => leaderboardButton.current?.focus({ preventScroll: true }));
   };
@@ -178,14 +199,15 @@ export default function App() {
         <div className="reveal-content">
           <div className="tip-wrap"><span className="quote-mark" aria-hidden="true">“</span><h2 ref={tipHeading} tabIndex={-1} className={`tip-text ${result.tip.text.length > 110 ? 'tip-long' : ''}`}>{result.tip.text}</h2></div>
           <div className="result-actions" inert={game.phase !== 'rating'} aria-hidden={game.phase !== 'rating'}>
-            <TrashRating key={result.tip.id} value={ratings[result.tip.id] ?? 0} onChange={rate} persisted={persisted} />
+            <TrashRating key={game.spin} value={currentRating} onChange={rate} persisted={persisted} />
             <button type="button" className="primary-button replay-button" onClick={spin}><span>Geef me nog een Noobtip!</span><Icon name="arrow" /></button>
             <button type="button" className="menu-button" onClick={backToMenu}>TERUG NAAR HOOFDMENU</button>
           </div>
         </div>
       </section>}
     </section>}
-    {started && leaderboardOpen && <Leaderboard ratings={ratings} onBack={closeLeaderboard} />}
+    {started && leaderboardOpen && <Leaderboard previousCount={mountainSeen.current} ratings={ratings} onBack={closeLeaderboard} />}
+    {celebration && <StreakCelebration milestone={celebration} reduced={reduced} onDone={() => setCelebration(null)} />}
     <div className="sr-only" role="status" aria-live="polite">{game.phase === 'spinning' ? 'Het Noobrad draait.' : game.phase === 'rating' && result ? `${segments[result.segment].label}. ${result.tip.text}` : ''}</div>
     {started && <footer className="footer" aria-hidden="true" />}
   </main>;

@@ -1,4 +1,6 @@
-import { type CategoryId, type StoredCategoryId, type Tip, tips } from '../data/tips';
+import { selectFromPool, browserRandom, type History } from './selection';
+export type { History } from './selection';
+import { type CategoryId, type Tip, tips } from '../data/tips';
 
 export type Tier = 'normal' | 'mega' | 'legendary';
 export const segments: { label: string; short: string; tier: Tier; color: string; icon: string }[] = [
@@ -21,7 +23,6 @@ export const revealText: Record<Tier, { title: string; eyebrow: string; footnote
   legendary: { title: 'LEGENDARISCH SLECHT.', eyebrow: 'DEZE TIP VERDIENT EEN STANDBEELD', footnote: 'Een historisch dieptepunt in advies.' },
 };
 
-export type History = Partial<Record<StoredCategoryId, string[]>>;
 export const positiveMod = (value: number, modulus: number) => ((value % modulus) + modulus) % modulus;
 export function chooseSegment(random = Math.random): number {
   return Math.min(segments.length - 1, Math.max(0, Math.floor(random() * segments.length)));
@@ -42,15 +43,9 @@ export function spinProgress(t: number): number {
   const raw = (x: number) => 1 - (1 + k * x) * Math.exp(-k * x);
   return raw(Math.min(1, Math.max(0, t))) / raw(1);
 }
-export function selectTip(category: CategoryId, history: History, random = Math.random): { tip: Tip; history: History } {
-  const pool = tips.filter(tip => tip.category === category);
-  const seen = history[category] ?? [];
-  let candidates = pool.filter(tip => !seen.includes(tip.id));
-  const exhausted = candidates.length === 0;
-  if (exhausted) candidates = pool.filter(tip => tip.id !== seen.at(-1));
-  if (!candidates.length) candidates = pool;
-  const tip = candidates[Math.min(candidates.length - 1, Math.floor(random() * candidates.length))];
-  return { tip, history: { ...history, [category]: [...(exhausted ? [] : seen), tip.id] } };
+export function selectTip(category: CategoryId, history: History, random = browserRandom): { tip: Tip; history: History } {
+  const { tip, bag } = selectFromPool(tips.filter(tip => tip.category === category), history[category], random);
+  return { tip, history: { ...history, [category]: bag } };
 }
 
 export interface Result { tip: Tip; segment: number; tier: Tier; rotation: number }

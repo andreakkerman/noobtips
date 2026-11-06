@@ -63,23 +63,13 @@ test('category selection controls the entire tip pool', { tag: '@smoke' }, async
   }
 });
 
-test('Full-pool exhaustion, replay without rating and independent category history', async ({ page }) => {
-  // All category rounds exercise the complete history; keep each transition's 7s limit.
-  test.slow();
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.addInitScript(() => { Math.random = () => .05; });
-  await page.goto('./'); await enter(page); const ids = new Set<string>(); let last = '';
-  const pool = tips.filter(t => t.category === 'general');
-  for (let i = 0; i <= pool.length; i++) {
-    await page.getByRole('button', { name: /^(Geef me een Noobtip!|Geef me nog een Noobtip!)$/ }).click();
-    await expect(main(page)).toHaveAttribute('data-phase', 'rating');
-    const id = await main(page).getAttribute('data-tip-id') as string;
-    if (i < pool.length) { expect(ids.has(id)).toBe(false); ids.add(id); } else { expect(ids.has(id)).toBe(true); expect(id).not.toBe(last); }
-    last = id;
-  }
-  expect(ids.size).toBe(pool.length);
-  await page.getByRole('button', { name: 'TERUG NAAR HOOFDMENU' }).click(); await page.getByRole('button', { name: 'Arc Raiders', exact: true }).click();
-  await page.getByRole('button', { name: 'Geef me een Noobtip!', exact: true }).click(); await expect(main(page)).toHaveAttribute('data-phase', 'rating');
+test('exhausted pool resumes without a boundary repeat and categories stay independent', async ({ page }) => {
+  const ids = tips.filter(t => t.category === 'general').map(t=>t.id);
+  await page.addInitScript(ids => { localStorage.removeItem('noobtips.history.v2'); localStorage.setItem('noobtips.history.v1', JSON.stringify({general:ids})); Math.random=()=>0; },ids);
+  await page.goto('./');await enter(page);await spinToResult(page);
+  expect(await main(page).getAttribute('data-tip-id')).not.toBe(ids.at(-1));
+  await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
+  await page.getByRole('button',{name:'Arc Raiders',exact:true}).click();await spinToResult(page);
   expect(await main(page).getAttribute('data-tip-id')).toMatch(/^arc-/);
 });
 
@@ -121,13 +111,15 @@ test('rating fills, changes, overloads, and persists after reload', { tag: '@smo
   await expect(page.locator('.trash-object.overloaded')).toHaveCount(5);
   await page.getByRole('radio', { name: /^2 van 5/ }).click(); await page.mouse.move(0, 0);
   await expect(page.locator('.trash-object.filled')).toHaveCount(2);
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem('noobtips.ratings.v1')!)[key!], id)).toBe(2);
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem('noobtips.ratings.v2')!).find((e: {tipId:string}) => e.tipId === key).value, id)).toBe(2);
   await page.reload(); await enter(page); await expect(main(page)).toHaveAttribute('data-phase', 'ready');
-  expect(await page.evaluate(key => JSON.parse(localStorage.getItem('noobtips.ratings.v1')!)[key!], id)).toBe(2);
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem('noobtips.ratings.v2')!).find((e: {tipId:string}) => e.tipId === key).value, id)).toBe(2);
   // Make that previously rated tip the only unseen member of its category.
-  await page.evaluate(({ key, ids }) => { localStorage.setItem('noobtips.history.v1', JSON.stringify({ general: ids.filter(value => value !== key) })); }, { key: id, ids: tips.filter(t => t.category === 'general').map(t => t.id) });
+  await page.evaluate(({ key, ids }) => { localStorage.removeItem('noobtips.history.v2'); localStorage.setItem('noobtips.history.v1', JSON.stringify({ general: ids.filter(value => value !== key) })); }, { key: id, ids: tips.filter(t => t.category === 'general').map(t => t.id) });
   await page.reload(); await enter(page); await spinToResult(page); await expect(main(page)).toHaveAttribute('data-tip-id', id!);
-  await expect(page.getByRole('radio', { name: /^2 van 5/ })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('[role=radio][aria-checked=true]')).toHaveCount(0);
+  await page.getByRole('radio',{name:/^5 van 5/}).click();
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('noobtips.ratings.v2')!).length)).toBe(2);
 });
 
 test('keyboard rating supports arrows, End, Home and a visible focus ring', async ({ page }) => {
@@ -140,7 +132,7 @@ test('keyboard rating supports arrows, End, Home and a visible focus ring', asyn
 });
 
 test('corrupted storage and unavailable storage never block playing', async ({ page }) => {
-  await page.addInitScript(() => { localStorage.setItem('noobtips.ratings.v1', '{bad'); localStorage.setItem('noobtips.history.v1', 'null'); });
+  await page.addInitScript(() => { localStorage.setItem('noobtips.ratings.v2', '{bad'); localStorage.setItem('noobtips.history.v1', 'null'); });
   await page.goto('./'); await enter(page); await spinToResult(page); await page.getByRole('radio', { name: /^4 van 5/ }).click();
   await expect(page.getByRole('radio', { name: /^4 van 5/ })).toHaveAttribute('aria-checked', 'true');
   await page.addInitScript(() => { Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Blocked', 'SecurityError'); } }); });

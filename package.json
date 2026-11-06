@@ -1,7 +1,7 @@
 {
   "name": "noobtips",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.8.0",
   "type": "module",
   "packageManager": "pnpm@10.11.0",
   "scripts": {
@@ -15,7 +15,8 @@
     "review": "node scripts/capture-review.mjs",
     "review:leaderboard": "node scripts/capture-leaderboard.mjs",
     "icons": "node scripts/generate-icons.mjs",
-    "test:pwa": "node scripts/test-pwa.mjs"
+    "test:pwa": "node scripts/test-pwa.mjs",
+    "review:mountain": "node scripts/capture-mountain-v18.mjs"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.2.6",

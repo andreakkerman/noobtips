@@ -7,7 +7,7 @@ import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 
 const smoke = process.argv.includes('--smoke');
-const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.6');
+const output = path.resolve(smoke ? '.runtime/pwa-smoke' : 'docs/review/noobtips-v1.8');
 // Last-resort bound also covers browser protocol calls and teardown.
 const deadline = setTimeout(() => { console.error('PWA suite exceeded its hard deadline'); process.exit(1); }, smoke ? 180_000 : 300_000);
 await mkdir(output, { recursive: true });
@@ -70,6 +70,8 @@ try {
   const sw=await readFile(builds.a+'/sw.js','utf8');
   const assets=JSON.parse(sw.match(/const ASSETS = (.*);/)[1]);
   for(const asset of assets) {assert(asset.startsWith('/Noobtips/'));assert.equal((await fetch(origin+asset)).status,200,asset);}
+  assert(assets.some(a=>a.endsWith('/art/mountain/junk-atlas.webp')));
+  assert(assets.some(a=>a.endsWith('/art/mountain/courtyard.webp')));
   const cssName=assets.find(a=>a.endsWith('.css'));const css=await(await fetch(origin+cssName)).text();
   assert(css.includes('/Noobtips/art/observatory.webp'));assert(!css.includes('url(/art/'));
   check('Project base: manifest, all precache assets, artwork/font URLs and icon sizes valid.');
@@ -87,13 +89,15 @@ try {
     await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
   }
   await page.reload();await phase(page,'welcome');
-  const saved=await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v1'));assert.equal(Object.keys(JSON.parse(saved)).length,2);
+  const saved=await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v2'));assert.equal(Object.keys(JSON.parse(saved)).length,2);
   await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
   await page.getByRole('button',{name:'TOP 20',exact:true}).click();
   assert.equal(await page.locator('.leaderboard-row').count(),2);
-  for(const [id,rating] of Object.entries(JSON.parse(saved))) {
+  for(const {tipId:id,value:rating} of JSON.parse(saved)) {
     assert.equal(await page.locator(`.leaderboard-row[data-tip-id="${id}"]`).getAttribute('data-rating'),String(rating));
   }
+  assert.equal(await page.locator('.mountain-scene canvas').count(),1);
+  await until(()=>page.locator('.mountain-scene canvas').evaluate(el=>el.getContext('2d').getImageData(0,0,1,1).data[3]>0),'offline mountain artwork');
   await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU',exact:true}).click();await phase(page,'ready');
   await page.reload();await phase(page,'welcome');
   check('Personal Top 20 opens offline with the persisted ratings and returns directly to the wheel.');
@@ -107,7 +111,8 @@ try {
   serving=builds.b;await checkUpdate(page);await waitUpdate(page);
   await phase(page,'revealing');assert.deepEqual(await cacheNames(page).then(k=>k.filter(x=>before.includes(x))),before);
   await phase(page,'rating');await page.getByRole('radio',{name:/^5 van 5/}).click();
-  const rated=await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v1'));
+  const rated=await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v2'));
+  const selectionState=await page.evaluate(()=>localStorage.getItem('noobtips.history.v2'));
   await page.waitForTimeout(500);assert(await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting)));
   const id=await page.locator('main').getAttribute('data-tip-id');
   await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
@@ -115,8 +120,9 @@ try {
   await page.waitForLoadState('load');await phase(page,'ready');
   assert.equal(await page.getByRole('button',{name:'Arc Raiders',exact:true}).getAttribute('aria-pressed'),'true');
   assert.equal(await page.getByRole('button',{name:'Geluid aanzetten'}).getAttribute('aria-pressed'),'false');
-  assert.equal(await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v1')),rated);
-  assert.equal(JSON.parse(rated)[id],5);
+  assert.equal(await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v2')),rated);
+  assert.equal(JSON.parse(rated).find(e=>e.tipId===id).value,5);
+  assert.equal(await page.evaluate(()=>localStorage.getItem('noobtips.history.v2')),selectionState);
   check('Update arriving in spin remains waiting through reveal/rating; menu applies it quietly, removes old cache and preserves category, mute and ratings.');
   // Another open app window must prevent activation, even if this page is idle.
   await page.getByRole('button',{name:'Geluid aanzetten'}).click();
@@ -129,7 +135,7 @@ try {
   await second.close();await page.bringToFront();await page.evaluate(()=>window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);await phase(page,'leaderboard');
   assert(await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting)));
-  assert.equal(await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v1')),rated);
+  assert.equal(await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v2')),rated);
   await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU',exact:true}).click();
   await until(()=>page.evaluate(async()=>!(await navigator.serviceWorker.getRegistration()).waiting).catch(()=>false),'update after other window closed');
   await phase(page,'ready');
@@ -157,7 +163,7 @@ try {
   const relaunched=await context.newPage();await relaunched.goto(url);await workerReady(relaunched);
   await until(async()=>{const keys=await cacheNames(relaunched).catch(()=>stable);return keys.length===1&&!stable.includes(keys[0]);},'update on relaunch');
   await phase(relaunched,'welcome');
-  assert.equal(await relaunched.evaluate(()=>localStorage.getItem('noobtips.ratings.v1')),rated);
+  assert.equal(await relaunched.evaluate(()=>localStorage.getItem('noobtips.ratings.v2')),rated);
   check('Relaunch picks up a complete newer version at welcome without losing saved ratings.');
   await context.close();
   // Portrait / rotation is usable without orientation locking; target landscape screenshots.
@@ -171,7 +177,7 @@ try {
     await p.getByRole('button',{name:'SPELEN!',exact:true}).click();await phase(p,'ready');
     await p.screenshot({path:path.join(output,`${width}x${height}-ready.png`),animations:'disabled'});
     for(const [label,tip] of [['short',tips[0]],['long',tips.at(-1)]]) {
-      await p.evaluate(({tip,ids})=>{localStorage.setItem('noobtips.history.v1',JSON.stringify({[tip.category]:ids.filter(id=>id!==tip.id)}));}, {tip,ids:tips.filter(t=>t.category===tip.category).map(t=>t.id)});
+      await p.evaluate(({tip,ids})=>{localStorage.removeItem('noobtips.history.v2');localStorage.setItem('noobtips.history.v1',JSON.stringify({[tip.category]:ids.filter(id=>id!==tip.id)}));}, {tip,ids:tips.filter(t=>t.category===tip.category).map(t=>t.id)});
       await p.reload();await p.getByRole('button',{name:'SPELEN!',exact:true}).click();
       await p.getByRole('button',{name:{arc:'Arc Raiders',school:'School',general:'Algemeen'}[tip.category],exact:true}).click();
       await p.evaluate(()=>{Math.random=()=>.25;});

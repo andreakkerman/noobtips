@@ -33,6 +33,10 @@ class ArcadeAudio {
     const notes = tier === 'legendary' ? [220, 330, 440, 554.37, 659.25, 880] : tier === 'mega' ? [261.63, 392, 523.25, 659.25] : [392, 523.25, 659.25];
     notes.forEach((note, i) => this.tone(note, 0.55, i * 0.075, 'sine', 0.24));
   }
+  milestone() {
+    this.tone(55, 1.8, 0, 'sine', .8, 36);
+    [220,330,440,554.37,659.25,880].forEach((note,i) => this.tone(note, 1.7, .08+i*.065, 'triangle', .16));
+  }
   rate(value: number) { this.tone(220 + value * 70, 0.12, 0, 'triangle', 0.35); this.tone(440 + value * 80, 0.22, 0.06, 'sine', 0.22); }
 }
 export const arcadeAudio = new ArcadeAudio();

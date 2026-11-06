@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { tips } from '../src/data/tips';
 
-const key = 'noobtips.ratings.v1';
+const key = 'noobtips.ratings.v2';
 const rows = (page: Page) => page.locator('.leaderboard-row');
 async function open(page: Page) {
   await page.goto('./');
@@ -33,10 +33,10 @@ test('empty Top 20 ignores inactive and orphaned ratings and preserves menu stat
   expect(await page.evaluate(() => localStorage.getItem('noobtips.history.v1'))).toBe(history);
 });
 
-for (const count of [3, 20, 60]) test(`Top 20 ranks ${count} rated tips with stable ties and complete text`, async ({ page, browserName }, testInfo) => {
+for (const count of [3, 20, tips.length]) test(`Top 20 ranks ${count} rated tips with stable ties and complete text`, async ({ page, browserName }, testInfo) => {
   const ratings = Object.fromEntries(tips.slice(0, count).map((tip, index) => [tip.id, index % 5 + 1]));
   const expected = tips.filter(tip => ratings[tip.id]).sort((a, b) => ratings[b.id] - ratings[a.id] || (a.id < b.id ? -1 : 1)).slice(0, 20);
-  await page.addInitScript(({ ratings, key }) => localStorage.setItem(key, JSON.stringify(ratings)), { ratings, key });
+  await page.addInitScript(({ ratings, key }) => localStorage.setItem(key, JSON.stringify(Object.entries(ratings).map(([tipId,value],i)=>({id:String(i),tipId,value})))), { ratings, key });
   await open(page);
   await expect(rows(page)).toHaveCount(Math.min(count, 20));
   expect(await rows(page).evaluateAll(elements => elements.map(el => el.getAttribute('data-tip-id')))).toEqual(expected.map(tip => tip.id));
@@ -93,7 +93,7 @@ test('Top 20 reflects gameplay ratings and changes from another window', { tag: 
   await expect(rows(page).first()).toHaveAttribute('data-tip-id', id);
   await expect(rows(page).first()).toHaveAttribute('data-rating', '5');
   const other = await context.newPage(); await other.goto('./');
-  await other.evaluate(({ id, key }) => localStorage.setItem(key, JSON.stringify({ [id]: 1, 'arc-030': 5 })), { id, key });
+  await other.evaluate(({ id, key }) => localStorage.setItem(key, JSON.stringify([{id:'other1',tipId:id,value:1},{id:'other2',tipId:'arc-030',value:5}])), { id, key });
   await expect(rows(page)).toHaveCount(2);
   await expect(rows(page).first()).toHaveAttribute('data-tip-id', 'arc-030');
   await expect(rows(page).last()).toHaveAttribute('data-rating', '1');

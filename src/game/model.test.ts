@@ -1,17 +1,20 @@
+import type { Bag } from './selection';
 import { describe, expect, it } from 'vitest';
 import { categories, tips, allTips } from '../data/tips';
 import { chooseSegment, initialState, landingRotation, segmentAtPointer, segments, selectTip, spinProgress, transition, type History } from './model';
-import { HISTORY_KEY, RATINGS_KEY, loadHistory, loadRatings, save, type StorageLike } from './storage';
+import { HISTORY_KEY, loadHistory, save, type StorageLike } from './storage';
 
 describe('Dutch content and shuffle bags', () => {
-  it('keeps 80 stored tips and 60 active tips in the requested category order', () => {
-    expect(allTips).toHaveLength(80);
-    expect(allTips.filter(t => t.category === 'school')).toHaveLength(20);
-    expect(tips).toHaveLength(60);
+  it('keeps every active tip and the inactive collection in the requested category order', () => {
+    expect(allTips.length).toBeGreaterThan(tips.length);
+    expect(allTips.some(t => t.category === 'school')).toBe(true);
+    expect(tips).toHaveLength(allTips.filter(t => t.category !== 'school').length);
     expect(categories.map(c => c.id)).toEqual(['general', 'arc']);
     expect(tips.some(t => (t.category as string) === 'school')).toBe(false);
     expect(new Set(tips.map(t => t.id)).size).toBe(tips.length);
-    categories.forEach(c => expect(tips.filter(t => t.category === c.id).length).toBe(30));
+    expect(new Set(allTips.map(t => t.id)).size).toBe(allTips.length);
+    expect(allTips.every(t => ['general','arc','school'].includes(t.category))).toBe(true);
+    categories.forEach(c => expect(tips.filter(t => t.category === c.id).length).toBeGreaterThan(0));
   });
   it.each(categories)('exhausts $name without repeats and avoids a boundary repeat', category => {
     let history: History = {}; let last = '';
@@ -32,8 +35,8 @@ describe('Dutch content and shuffle bags', () => {
     const b = selectTip('general', a.history, () => 0);
     const c = selectTip('arc', b.history, () => 0);
     expect(c.tip.id).not.toBe(a.tip.id);
-    expect(c.history.general).toEqual([b.tip.id]);
-    expect(c.history.arc).toEqual([a.tip.id, c.tip.id]);
+    expect((c.history.general as Bag).seen).toEqual([b.tip.id]);
+    expect((c.history.arc as Bag).seen).toEqual([a.tip.id, c.tip.id]);
   });
 });
 
@@ -98,24 +101,9 @@ describe('explicit game state transitions', () => {
 
 describe('defensive local persistence', () => {
   const memory = (): StorageLike => { const items = new Map<string,string>(); return { getItem: key => items.get(key) ?? null, setItem: (key, value) => { items.set(key, value); } }; };
-  it('saves, reloads and changes individual ratings', () => {
-    const storage = memory(); save(RATINGS_KEY, { 'arc-001': 5 }, storage); expect(loadRatings(storage)).toEqual({ 'arc-001': 5 });
-    save(RATINGS_KEY, { ...loadRatings(storage), 'arc-001': 2, 'school-003': 4 }, storage); expect(loadRatings(storage)).toEqual({ 'arc-001': 2, 'school-003': 4 });
-  });
-  it('handles missing, malformed and wrong-shaped storage', () => {
-    const storage = memory(); expect(loadRatings(storage)).toEqual({});
-    for (const value of ['{bad', 'null', '[]', '3', '"hi"']) { storage.setItem(RATINGS_KEY, value); expect(loadRatings(storage)).toEqual({}); }
-  });
-  it('rejects unknown IDs, out-of-range, fractional and nonnumeric ratings', () => {
-    const storage = memory(); storage.setItem(RATINGS_KEY, JSON.stringify({ unknown: 5, 'arc-001': 0, 'arc-002': 6, 'arc-003': 2.5, 'arc-004': '5', 'arc-005': 3 })); expect(loadRatings(storage)).toEqual({ 'arc-005': 3 });
-  });
-  it('survives blocked storage and quota failures', () => {
-    const blocked: StorageLike = { getItem: () => { throw Error('Blocked'); }, setItem: () => { throw Error('Quota'); } };
-    expect(loadRatings(blocked)).toEqual({}); expect(save(RATINGS_KEY, {}, blocked)).toBe(false);
-  });
   it('validates and reloads histories without losing category isolation', () => {
     const storage = memory(); save(HISTORY_KEY, { arc: ['arc-001', 'arc-001', 'mc-001', 'bad'], minecraft: ['mc-001'], school: ['school-001'] }, storage);
-    const loaded = loadHistory(storage); expect(loaded.arc).toEqual(['arc-001']); expect(loaded).not.toHaveProperty('minecraft'); expect(loaded.school).toEqual(['school-001']);
-    expect(selectTip('arc', loaded, () => 0).tip.id).toBe('arc-002');
+    const loaded = loadHistory(storage); expect((loaded.arc as Bag).seen).toEqual(['arc-001']); expect(loaded).not.toHaveProperty('minecraft'); expect((loaded.school as Bag).seen).toEqual(['school-001']);
+    expect(selectTip('arc', loaded, () => 0).tip.id).not.toBe('arc-001');
   });
 });

@@ -1,3 +1,5 @@
+import { Mountain } from './Mountain';
+import { fiveCount } from '../game/ratings';
 import { useEffect, useRef } from 'react';
 import { categories } from '../data/tips';
 import { rankTips } from '../game/leaderboard';
@@ -5,7 +7,7 @@ import type { Ratings } from '../game/storage';
 import { Bin } from './TrashRating';
 import { Icon } from './Icon';
 
-export function Leaderboard({ ratings, onBack }: { ratings: Ratings; onBack(): void }) {
+export function Leaderboard({ ratings, onBack, previousCount }: { ratings: Ratings; previousCount: number; onBack(): void }) {
   const ranked = rankTips(ratings);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
@@ -18,6 +20,7 @@ export function Leaderboard({ ratings, onBack }: { ratings: Ratings; onBack(): v
         <p className="leaderboard-intro">Het slechtste advies verdient een ereplaats.</p>
       </div>
     </header>
+    <div className="leaderboard-world"><Mountain count={fiveCount(ratings)} previousCount={previousCount} /><div className="ranking-panel">
     {ranked.length ? <div className="leaderboard-scroll" role="region" aria-label="Gerangschikte noobtips" tabIndex={0}>
       <ol className="leaderboard-list">
         {ranked.map((tip, index) => <li key={tip.id} className={`leaderboard-row place-${index + 1}`} data-tip-id={tip.id} data-rating={tip.rating}>
@@ -25,7 +28,7 @@ export function Leaderboard({ ratings, onBack }: { ratings: Ratings; onBack(): v
           <div className="leaderboard-tip"><span className="leaderboard-category">{categories.find(category => category.id === tip.category)!.name}</span><p>{tip.text}</p></div>
           <div className="leaderboard-score" role="img" aria-label={`${tip.rating} van 5 prullenbakken`}>
             <Bin filled overloaded={tip.rating === 5} index={0} animation={0} />
-            <span aria-hidden="true"><strong>{tip.rating}</strong><small>/ 5</small></span>
+            <span aria-hidden="true"><strong>{Number(tip.rating.toFixed(1))}</strong><small>/ 5</small></span>
           </div>
         </li>)}
       </ol>
@@ -34,6 +37,7 @@ export function Leaderboard({ ratings, onBack }: { ratings: Ratings; onBack(): v
       <h2>Nog geen glorieuze onzin.</h2>
       <p>Geef een Noobtip een prullenbakbeoordeling.<br />Jouw slechtste tips krijgen hier een ereplaats.</p>
     </div>}
+    </div></div>
     <footer className="leaderboard-footer">
       <button type="button" className="menu-button" onClick={onBack}>TERUG NAAR HOOFDMENU</button>
     </footer>
