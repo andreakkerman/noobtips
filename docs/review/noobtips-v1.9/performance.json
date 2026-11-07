@@ -1,0 +1,8 @@
+{
+  "viewport": "1024x768",
+  "cpuThrottle": 4,
+  "ambientParticles": 24,
+  "paintSamples": 56,
+  "meanDrawMs": 0.2964285675968443,
+  "p95DrawMs": 0.5
+}

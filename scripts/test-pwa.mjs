@@ -172,6 +172,7 @@ try {
   const celebrationContext=await newContext({reducedMotion:'reduce'});
   const celebrationPage=await celebrationContext.newPage();await celebrationPage.goto(url);await workerReady(celebrationPage);
   await celebrationPage.getByRole('button',{name:'SPELEN!',exact:true}).click();
+  await celebrationContext.setOffline(true);
   for(let i=0;i<5;i++){
     await celebrationPage.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await phase(celebrationPage,'rating');
     await celebrationPage.getByRole('radio',{name:/^5 van 5/}).click();
@@ -179,6 +180,7 @@ try {
   }
   await celebrationPage.getByRole('button',{name:'YAY!',exact:true}).waitFor();
   const celebrationRatings=await celebrationPage.evaluate(()=>localStorage.getItem('noobtips.ratings.v2'));
+  await celebrationContext.setOffline(false);
   serving=builds.b;await checkUpdate(celebrationPage);await waitUpdate(celebrationPage);
   await celebrationPage.waitForTimeout(3500);
   assert.equal(await celebrationPage.getByRole('dialog').count(),1);
@@ -187,7 +189,7 @@ try {
   await until(()=>celebrationPage.evaluate(async()=>!(await navigator.serviceWorker.getRegistration()).waiting).catch(()=>false),'update after YAY');
   await phase(celebrationPage,'ready');assert.equal(await celebrationPage.evaluate(()=>localStorage.getItem('noobtips.ratings.v2')),celebrationRatings);
   await celebrationContext.close();
-  check('A settled interactive streak defers PWA activation until YAY, then resumes the menu without losing ratings.');
+  check('An offline-earned interactive streak defers PWA activation until YAY, then resumes the menu without losing ratings.');
   // Portrait / rotation is usable without orientation locking; target landscape screenshots.
   if (!smoke) {
   const source=await readFile('src/data/tips.ts','utf8');
