@@ -6,8 +6,8 @@ const rows = (page: Page) => page.locator('.leaderboard-row');
 async function open(page: Page) {
   await page.goto('./');
   await page.getByRole('button', { name: 'SPELEN!', exact: true }).click();
-  await page.getByRole('button', { name: 'TOP 20', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Prullenbak Top 20' })).toBeFocused();
+  await page.getByRole('button', { name: 'DE VUILNISBELT', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'DE VUILNISBELT' })).toBeFocused();
 }
 test.beforeEach(async ({ page }) => { await page.emulateMedia({ reducedMotion: 'reduce' }); });
 
@@ -20,13 +20,18 @@ test('empty Top 20 ignores inactive and orphaned ratings and preserves menu stat
   await page.goto('./'); await page.getByRole('button', { name: 'SPELEN!', exact: true }).click();
   await page.getByRole('button', { name: 'Arc Raiders', exact: true }).click();
   const sound = await page.locator('.sound-button').getAttribute('aria-pressed');
-  await page.getByRole('button', { name: 'TOP 20', exact: true }).click();
+  await page.getByRole('button', { name: 'DE VUILNISBELT', exact: true }).click();
   await expect(page.getByText('Nog geen glorieuze onzin.')).toBeVisible();
   await expect(rows(page)).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'DE VUILNISBELT', exact: true })).toHaveCount(1);
+  await expect(page.getByRole('heading', { name: 'De 20 slechtste tips', exact: true })).toBeVisible();
+  await expect(page.getByText('0 tips weggegooid', { exact: true })).toBeVisible();
+  await expect(page.locator('.leaderboard')).not.toContainText('ereplaats');
+  await expect(page.locator('.mountain-caption h2')).toHaveCount(0);
   await expect(page.locator('.leaderboard button')).toHaveCount(1);
   await page.getByRole('button', { name: 'TERUG NAAR HOOFDMENU', exact: true }).click();
   await expect(page.locator('main')).toHaveAttribute('data-phase', 'ready');
-  await expect(page.getByRole('button', { name: 'TOP 20', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'DE VUILNISBELT', exact: true })).toBeFocused();
   await expect(page.getByRole('button', { name: 'Arc Raiders', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.sound-button')).toHaveAttribute('aria-pressed', sound!);
   expect(await page.evaluate(key => localStorage.getItem(key), key)).toBe(ratings);
@@ -74,7 +79,7 @@ for (const count of [3, 20, tips.length]) test(`Top 20 ranks ${count} rated tips
   }
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth && document.querySelector('main')!.scrollTop === 0)).toBe(true);
   await page.reload(); await page.getByRole('button', { name: 'SPELEN!', exact: true }).click();
-  await page.getByRole('button', { name: 'TOP 20', exact: true }).click();
+  await page.getByRole('button', { name: 'DE VUILNISBELT', exact: true }).click();
   expect(await rows(page).evaluateAll(elements => elements.map(el => el.getAttribute('data-tip-id')))).toEqual(expected.map(tip => tip.id));
 });
 
@@ -88,7 +93,7 @@ test('Top 20 reflects gameplay ratings and changes from another window', { tag: 
   await page.getByRole('radio', { name: /^2 van 5/ }).click();
   await page.getByRole('radio', { name: /^5 van 5/ }).click();
   await page.getByRole('button', { name: 'TERUG NAAR HOOFDMENU' }).click();
-  await page.getByRole('button', { name: 'TOP 20', exact: true }).click();
+  await page.getByRole('button', { name: 'DE VUILNISBELT', exact: true }).click();
   await expect(rows(page)).toHaveCount(1);
   await expect(rows(page).first()).toHaveAttribute('data-tip-id', id);
   await expect(rows(page).first()).toHaveAttribute('data-rating', '5');

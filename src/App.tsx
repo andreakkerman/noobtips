@@ -192,7 +192,7 @@ export default function App() {
         </div>
         <div className="launch-section">
           <button type="button" ref={spinButton} className="primary-button spin-button" disabled={game.phase === 'spinning'} onClick={spin}><span>{game.phase === 'spinning' ? (game.landed ? 'DAAR KOMT IE…' : 'HET RAD DRAAIT…') : 'Geef me een Noobtip!'}</span><Icon name="arrow" /></button>
-          <button type="button" ref={leaderboardButton} className="leaderboard-button" disabled={game.phase !== 'ready'} onClick={openLeaderboard}><Icon name="trophy" /><span>TOP 20</span></button>
+          <button type="button" ref={leaderboardButton} className="leaderboard-button" disabled={game.phase !== 'ready'} onClick={openLeaderboard}><Icon name="trash" /><span>DE VUILNISBELT</span></button>
         </div>
       </div>
       <div ref={stage} className="machine-area"><Wheel game={game} reduced={reduced} onLand={onLand} /></div>

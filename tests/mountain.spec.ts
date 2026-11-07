@@ -15,7 +15,7 @@ test('final ratings produce one milestone, category changes preserve streak and 
  await page.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await expect(page.locator('main')).toHaveAttribute('data-phase','rating');
  await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
  await expect(page.locator('.streak-celebration')).toHaveCount(0);
- await page.getByRole('button',{name:'TOP 20',exact:true}).click();await expect(page.getByText('5 volledig afgekeurd',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();await expect(page.getByText('5 tips weggegooid',{exact:true})).toBeVisible();
 });
 test('mountain renders deterministic pixels within a bounded frame budget',async({page})=>{
  await page.goto('./');
@@ -37,7 +37,7 @@ test('new artwork loads locally and closing an active arrival disposes the scene
  await page.goto('./');await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
  await page.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await expect(page.locator('main')).toHaveAttribute('data-phase','rating');
  await page.getByRole('radio',{name:/^5 van 5/}).click();await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
- await page.emulateMedia({reducedMotion:'no-preference'});await page.getByRole('button',{name:'TOP 20',exact:true}).click();
+ await page.emulateMedia({reducedMotion:'no-preference'});await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();
  await expect(page.locator('.mountain-scene canvas')).toBeVisible();await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
  await expect(page.locator('.mountain-scene')).toHaveCount(0);await page.waitForTimeout(1200);
  await expect(page.locator('main')).toHaveAttribute('data-phase','ready');expect(external).toEqual([]);

@@ -16,7 +16,7 @@ for(const [width,height] of [[1024,768],[1280,800],[1366,768]]){
  await page.getByRole('button',{name:'YAY!',exact:true}).click();await page.locator('main[data-phase=ready]').waitFor();
  for(const count of [1,25,100,150]){
   await page.evaluate(n=>localStorage.setItem('noobtips.ratings.v2',JSON.stringify(Array.from({length:n},(_,i)=>({id:`capture-${i}`,tipId:`general-${String(i%100+1).padStart(3,'0')}`,value:5})))),count);
-  await page.reload();await page.getByRole('button',{name:'SPELEN!',exact:true}).click();await page.getByRole('button',{name:'TOP 20',exact:true}).click();await page.locator('canvas[data-entrance=establishing]').waitFor();
+  await page.reload();await page.getByRole('button',{name:'SPELEN!',exact:true}).click();await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();await page.locator('canvas[data-entrance=establishing]').waitFor();
   const shots=[];previous=0;
   for(const time of [0,700,1200,1600,2200,3000]){await page.waitForTimeout(time-previous);previous=time;shots.push({input:await sharp(await page.screenshot()).resize(500,320,{fit:'contain'}).toBuffer(),left:shots.length%3*500,top:Math.floor(shots.length/3)*320});}
   await sharp({create:{width:1500,height:640,channels:3,background:'#061c24'}}).composite(shots).png().toFile(`${dir}/${width}-mountain-${count}-sequence.png`);

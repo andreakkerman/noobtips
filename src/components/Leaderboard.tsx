@@ -14,13 +14,12 @@ export function Leaderboard({ ratings, onBack }: { ratings: Ratings; onBack(): v
 
   return <section className="leaderboard" aria-labelledby="leaderboard-title">
     <header className="leaderboard-header">
-      <div className="leaderboard-trophy" aria-hidden="true"><Icon name="trophy" /></div>
-      <div><p className="leaderboard-kicker">JOUW PERSOONLIJKE RANGLIJST</p>
-        <h1 id="leaderboard-title" ref={heading} tabIndex={-1}>Prullenbak <span>Top 20</span></h1>
-        <p className="leaderboard-intro">Het slechtste advies verdient een ereplaats.</p>
+      <div className="leaderboard-trophy" aria-hidden="true"><Icon name="trash" /></div>
+      <div>
+        <h1 id="leaderboard-title" ref={heading} tabIndex={-1}>DE <span>VUILNISBELT</span></h1>
       </div>
     </header>
-    <div className="leaderboard-world"><Mountain count={fiveCount(ratings)} /><div className="ranking-panel">
+    <div className="leaderboard-world"><Mountain count={fiveCount(ratings)} /><div className="ranking-panel"><h2 className="ranking-title">De 20 slechtste tips</h2>
     {ranked.length ? <div className="leaderboard-scroll" role="region" aria-label="Gerangschikte noobtips" tabIndex={0}>
       <ol className="leaderboard-list">
         {ranked.map((tip, index) => <li key={tip.id} className={`leaderboard-row place-${index + 1}`} data-tip-id={tip.id} data-rating={tip.rating}>
@@ -35,7 +34,6 @@ export function Leaderboard({ ratings, onBack }: { ratings: Ratings; onBack(): v
     </div> : <div className="leaderboard-empty">
       <Bin filled={false} overloaded={false} index={0} animation={0} />
       <h2>Nog geen glorieuze onzin.</h2>
-      <p>Geef een Noobtip een prullenbakbeoordeling.<br />Jouw slechtste tips krijgen hier een ereplaats.</p>
     </div>}
     </div></div>
     <footer className="leaderboard-footer">

@@ -18,7 +18,7 @@ for(const [width,height] of [[1024,768],[768,1024]])for(const count of [1,11,75,
      if(window.stageFrames.at(-1)?.key!==key)window.stageFrames.push({key,time:performance.now(),image:c.toDataURL()});
    }).observe(document.querySelector('main'),{subtree:true,attributes:true,childList:true});
  });
- await page.getByRole('button',{name:'TOP 20',exact:true}).click();await page.locator('canvas[data-entrance=establishing]').waitFor();
+ await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();await page.locator('canvas[data-entrance=establishing]').waitFor();
  const initial=await page.locator('canvas').evaluate(c=>c.toDataURL());
  await page.screenshot({path:`${dir}/${width}-${count}-establishing.png`});
  await page.clock.runFor(1060);await page.screenshot({path:`${dir}/${width}-${count}-first-drop.png`});

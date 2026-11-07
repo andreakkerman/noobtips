@@ -32,7 +32,7 @@ try {
       await page.evaluate(ratings => localStorage.setItem('noobtips.ratings.v2', JSON.stringify(Object.entries(ratings).map(([tipId,value],i)=>({id:String(i),tipId,value})))), ratings);
       await page.reload();
       await page.getByRole('button', { name: 'SPELEN!', exact: true }).click();
-      await page.getByRole('button', { name: 'TOP 20', exact: true }).click();
+      await page.getByRole('button', { name: 'DE VUILNISBELT', exact: true }).click();
       assert.equal(await page.locator('.leaderboard-row').count(), Math.min(count, 20));
       assert(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth));
       await capture(`${count}-ratings`);
@@ -41,7 +41,7 @@ try {
         await capture('bottom');
         await page.getByRole('button', { name: 'TERUG NAAR HOOFDMENU', exact: true }).click();
         await page.getByRole('button', { name: 'Arc Raiders', exact: true }).click();
-        await page.getByRole('button', { name: 'TOP 20', exact: true }).click();
+        await page.getByRole('button', { name: 'DE VUILNISBELT', exact: true }).click();
         await capture('arc-background');
       }
     }

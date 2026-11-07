@@ -12,7 +12,7 @@ for(const [width,height] of [[1024,768],[1280,800],[1366,768]]){
  const ready=()=>page.waitForFunction(()=>{const c=document.querySelector('.mountain-scene canvas');return c&&c.width>300&&c.getContext('2d').getImageData(0,0,1,1).data[3]>0;});
  for(const count of counts){
   await page.evaluate(events=>localStorage.setItem('noobtips.ratings.v2',JSON.stringify(events)),ratings(count));await page.reload();
-  await page.getByRole('button',{name:'SPELEN!',exact:true}).click();await page.getByRole('button',{name:'TOP 20',exact:true}).click();await ready();await page.evaluate(()=>document.fonts.ready);
+  await page.getByRole('button',{name:'SPELEN!',exact:true}).click();await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();await ready();await page.evaluate(()=>document.fonts.ready);
   assert(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth));
   const file=`${width}-mountain-${count}.png`;await page.screenshot({path:`${output}/${file}`});report.captures.push(file);
  }
@@ -21,7 +21,7 @@ for(const [width,height] of [[1024,768],[1280,800],[1366,768]]){
   await page.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();await page.locator('main[data-phase=rating]').waitFor();await page.getByRole('radio',{name:/^5 van 5/}).click();await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
   await page.emulateMedia({reducedMotion:'no-preference'});
   await page.evaluate(()=>{window.reviewFrames=[];let previous=performance.now();const start=previous;const frame=now=>{window.reviewFrames.push(now-previous);previous=now;if(now-start<1400)requestAnimationFrame(frame);};requestAnimationFrame(frame);});
-  await page.getByRole('button',{name:'TOP 20',exact:true}).click();
+  await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();
   let previous=0;for(const time of [80,250,500,740,950,1250]){await page.waitForTimeout(time-previous);previous=time;await page.screenshot({path:`${output}/${width}-arrival-${before+1}-${time}.png`});}
   const frames=await page.evaluate(()=>window.reviewFrames);report.animations.push({width,count:before+1,frames:frames.length,p95:frames.sort((a,b)=>a-b)[Math.floor(frames.length*.95)]});
   await page.emulateMedia({reducedMotion:'reduce'});

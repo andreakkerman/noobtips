@@ -59,5 +59,5 @@ export function Mountain({ count }: { count: number }) {
     void render();
     return()=>{cancelled=true;clearTimeout(timer);cancelAnimationFrame(frame);stopImpact?.();};
   },[count]);
-  return <div className="mountain-scene"><canvas ref={canvas} aria-label={`De Afvalberg: ${count} volledig afgekeurd`} role="img" />{failed&&<p className="mountain-error">De berg kon niet laden. Open de Top 20 opnieuw.</p>}<div className="mountain-caption"><h2>De Afvalberg</h2><span>{count} volledig afgekeurd</span></div></div>;
+  return <div className="mountain-scene"><canvas ref={canvas} aria-label={`De Vuilnisbelt: ${count} tips weggegooid`} role="img" />{failed&&<p className="mountain-error">De berg kon niet laden. Open de Vuilnisbelt opnieuw.</p>}<div className="mountain-caption"><span>{count} tips weggegooid</span></div></div>;
 }

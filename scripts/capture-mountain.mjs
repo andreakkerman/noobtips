@@ -8,7 +8,7 @@ for(const [width,height] of [[1024,768],[1280,800],[1366,768]]){
  await page.goto('http://127.0.0.1:5173');
  for(const count of [0,1,10,17,25,38,50,63,75,100]){
   await page.evaluate(count=>localStorage.setItem('noobtips.ratings.v2',JSON.stringify(Array.from({length:count},(_,i)=>({id:String(i),tipId:`general-${String(i%100+1).padStart(3,'0')}`,value:5})))),count);
-  await page.reload();await page.getByRole('button',{name:'SPELEN!',exact:true}).click();await page.getByRole('button',{name:'TOP 20',exact:true}).click();await page.evaluate(()=>document.fonts.ready);
+  await page.reload();await page.getByRole('button',{name:'SPELEN!',exact:true}).click();await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();await page.evaluate(()=>document.fonts.ready);
   const file=`${output}/${width}-mountain-${count}.png`;await page.screenshot({path:file});report.captures.push(file);
  }
  // Exercise real session finalization, with fast reduced-motion gameplay and full motion on the reward.

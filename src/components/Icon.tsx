@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 
 export function Icon({ name, className, style }: { name: string; className?: string; style?: CSSProperties }) {
   const paths: Record<string, React.ReactNode> = {
+    trash: <><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7" /></>,
     trophy: <><path d="M7 3h10v6a5 5 0 0 1-10 0Z M7 5H3v3a4 4 0 0 0 4 4m10-7h4v3a4 4 0 0 1-4 4M12 14v5m-4 2h8m-7-2h6" /></>,
     radar: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><path d="m12 12 6-8M12 2v2M2 12h2M12 20v2M20 12h2" /><circle cx="8" cy="14" r="1" fill="currentColor" /></>,
     cube: <><path d="m12 2 9 5v10l-9 5-9-5V7Z M3 7l9 5 9-5M12 12v10M7.5 4.5l9 5" /></>,

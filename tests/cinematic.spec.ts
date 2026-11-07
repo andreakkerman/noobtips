@@ -39,7 +39,7 @@ for(const count of [1,11,75,100,150])test(`mountain ${count} establishes, replay
   await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
   const saved=await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v2'));
   for(let visit=0;visit<2;visit++){
-    await page.getByRole('button',{name:'TOP 20',exact:true}).click();const canvas=page.locator('.mountain-scene canvas');
+    await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();const canvas=page.locator('.mountain-scene canvas');
     await expect(canvas).toHaveAttribute('data-entrance','establishing');
     const expected=await page.evaluate(async n=>{
       const path='/src/game/mountain.ts';const {drawMountain,loadMountainArt}=await import(path);const art=await loadMountainArt();
@@ -65,15 +65,15 @@ test('empty and reduced-motion mountain stays still; delay and active replay can
     window.cancelAnimationFrame=id=>{active.delete(id);cancel(id);};
   });
   await page.goto('./');await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
-  await page.getByRole('button',{name:'TOP 20',exact:true}).click();await expect(page.locator('.mountain-scene canvas')).toHaveAttribute('data-entrance','settled');
+  await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();await expect(page.locator('.mountain-scene canvas')).toHaveAttribute('data-entrance','settled');
   await page.evaluate(()=>localStorage.setItem('noobtips.ratings.v2',JSON.stringify([{id:'one',tipId:'general-001',value:5}])));await page.reload();
   await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   for(const wait of [0,0,1150]){
-    await page.getByRole('button',{name:'TOP 20',exact:true}).click();await expect(page.locator('.mountain-scene canvas')).toHaveAttribute('data-entrance','establishing');
+    await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();await expect(page.locator('.mountain-scene canvas')).toHaveAttribute('data-entrance','establishing');
     await page.waitForTimeout(wait);await page.getByRole('button',{name:'TERUG NAAR HOOFDMENU'}).click();
   }
   await page.waitForTimeout(1800);await expect(page.locator('.mountain-scene')).toHaveCount(0);expect(errors).toEqual([]);
   expect(await page.evaluate(()=>(window as unknown as {animationFrames:Set<number>}).animationFrames.size)).toBe(0);
-  await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'TOP 20',exact:true}).click();await expect(page.locator('.mountain-scene canvas')).toHaveAttribute('data-entrance','settled');
+  await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();await expect(page.locator('.mountain-scene canvas')).toHaveAttribute('data-entrance','settled');
 });

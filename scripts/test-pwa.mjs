@@ -92,7 +92,7 @@ try {
   await page.reload();await phase(page,'welcome');
   const saved=await page.evaluate(()=>localStorage.getItem('noobtips.ratings.v2'));assert.equal(Object.keys(JSON.parse(saved)).length,2);
   await page.getByRole('button',{name:'SPELEN!',exact:true}).click();
-  await page.getByRole('button',{name:'TOP 20',exact:true}).click();
+  await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();
   assert.equal(await page.locator('.leaderboard-row').count(),2);
   for(const {tipId:id,value:rating} of JSON.parse(saved)) {
     assert.equal(await page.locator(`.leaderboard-row[data-tip-id="${id}"]`).getAttribute('data-rating'),String(rating));
@@ -132,7 +132,7 @@ try {
   await second.getByRole('button',{name:'SPELEN!',exact:true}).click();await second.getByRole('button',{name:'Geef me een Noobtip!',exact:true}).click();
   serving=builds.c;await checkUpdate(page);await waitUpdate(page);await phase(second,'rating');
   await page.waitForTimeout(500);assert(await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting)));
-  await page.getByRole('button',{name:'TOP 20',exact:true}).click();
+  await page.getByRole('button',{name:'DE VUILNISBELT',exact:true}).click();
   await second.close();await page.bringToFront();await page.evaluate(()=>window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);await phase(page,'leaderboard');
   assert(await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration()).waiting)));
